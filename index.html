@@ -24,23 +24,54 @@
             font-size: 16px;
             line-height: 1.5;
             color: #e0e0e0;
-            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+            overflow-x: hidden;
         }
         
+        /* Анимации */
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        /* Карточки */
         .card {
             background: #1e1e1e;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transition: transform 0.2s ease;
         }
         
+        @media (min-width: 768px) {
+            .card:hover {
+                transform: translateY(-2px);
+            }
+        }
+        
+        /* Кнопки */
         .btn-primary {
             background: #22c55e;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary:active {
+            transform: scale(0.98);
         }
         
         .btn-secondary {
             background: #374151;
         }
         
+        /* Модалка создания поста */
         .modal {
             position: fixed;
             top: 0;
@@ -69,33 +100,98 @@
             max-width: 500px;
             max-height: 90vh;
             overflow-y: auto;
-            border-radius: 16px;
+            border-radius: 20px;
             padding: 20px;
             margin: 16px;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
         }
         
-        .fab {
+        .modal.active .modal-content {
+            transform: scale(1);
+        }
+        
+        /* Боковое меню (drawer) */
+        .drawer {
             position: fixed;
-            bottom: 24px;
-            right: 24px;
-            width: 56px;
-            height: 56px;
+            top: 0;
+            right: 0;
+            width: 100%;
+            max-width: 400px;
+            height: 100%;
+            background: #1a1a1a;
+            z-index: 1001;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            box-shadow: -4px 0 20px rgba(0,0,0,0.5);
+            overflow-y: auto;
+        }
+        
+        .drawer.open {
+            transform: translateX(0);
+        }
+        
+        .drawer-header {
+            background: #252525;
+            padding: 20px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .drawer-content {
+            padding: 20px;
+        }
+        
+        .drawer-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .drawer-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        /* Кнопка + в правом верхнем углу */
+        .header-add-btn {
             background: #22c55e;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            z-index: 100;
+            transition: all 0.2s;
         }
         
+        .header-add-btn:active {
+            transform: scale(0.95);
+        }
+        
+        /* Логотип */
+        .logo {
+            height: 40px;
+            width: auto;
+        }
+        
+        /* Кнопка прокрутки вверх */
         .scroll-top {
             position: fixed;
             bottom: 24px;
             left: 24px;
             width: 48px;
             height: 48px;
-            background: #374151;
+            background: #22c55e;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -105,6 +201,7 @@
             visibility: hidden;
             transition: all 0.3s;
             z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         }
         
         .scroll-top.visible {
@@ -112,6 +209,7 @@
             visibility: visible;
         }
         
+        /* Лоадер */
         .loader {
             width: 40px;
             height: 40px;
@@ -126,10 +224,11 @@
             to { transform: rotate(360deg); }
         }
         
+        /* Поля ввода */
         input, textarea {
             background: #2d2d2d;
             border: 1px solid #3f3f3f;
-            border-radius: 8px;
+            border-radius: 12px;
             padding: 12px;
             color: #e0e0e0;
             font-size: 16px;
@@ -141,6 +240,7 @@
             border-color: #22c55e;
         }
         
+        /* Уведомления */
         .toast {
             position: fixed;
             bottom: 20px;
@@ -149,11 +249,17 @@
             background: #323232;
             color: white;
             padding: 12px 20px;
-            border-radius: 8px;
+            border-radius: 50px;
             z-index: 2000;
             animation: slideUp 0.3s ease;
             font-size: 14px;
             text-align: center;
+            white-space: nowrap;
+            background: #22c55e;
+        }
+        
+        .toast.error {
+            background: #dc2626;
         }
         
         @keyframes slideUp {
@@ -167,40 +273,29 @@
             }
         }
         
+        /* Изображение поста */
         .post-image {
             width: 100%;
-            max-height: 400px;
+            max-height: 350px;
             object-fit: cover;
+            border-radius: 16px 16px 0 0;
         }
         
+        /* Аватар */
         .avatar {
-            width: 40px;
-            height: 40px;
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
             object-fit: cover;
+            cursor: pointer;
+            transition: transform 0.2s;
         }
         
-        @media (min-width: 768px) {
-            .avatar {
-                width: 48px;
-                height: 48px;
-            }
+        .avatar:active {
+            transform: scale(0.95);
         }
         
-        #sentinel {
-            height: 20px;
-        }
-        
-        @media (max-width: 640px) {
-            .post-actions {
-                flex-direction: column;
-            }
-            .post-actions a {
-                width: 100%;
-                justify-content: center;
-            }
-        }
-        
+        /* Комментарии */
         .comments-section {
             border-top: 1px solid #374151;
             margin-top: 12px;
@@ -209,69 +304,102 @@
         
         .comment {
             background: #2d2d2d;
-            border-radius: 8px;
-            padding: 8px 12px;
+            border-radius: 12px;
+            padding: 10px 14px;
             margin-bottom: 8px;
+        }
+        
+        .like-btn {
+            cursor: pointer;
+            transition: all 0.2s;
         }
         
         .like-btn.liked {
             color: #ef4444;
         }
         
-        .ban-banner {
-            background: #dc2626;
-            color: white;
+        /* Проекты в drawer */
+        .user-project-item {
+            background: #252525;
+            border-radius: 12px;
             padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 16px;
-            text-align: center;
+            margin-bottom: 10px;
+            transition: all 0.2s;
         }
         
-        .delete-btn {
-            cursor: pointer;
-            transition: color 0.2s;
+        .user-project-item:active {
+            transform: scale(0.98);
         }
         
-        .delete-btn:hover {
-            color: #ef4444;
+        /* Адаптивность */
+        @media (max-width: 640px) {
+            .post-actions {
+                flex-direction: column;
+            }
+            .post-actions a {
+                width: 100%;
+                justify-content: center;
+            }
+            .drawer {
+                max-width: 100%;
+            }
+            .avatar {
+                width: 40px;
+                height: 40px;
+            }
+        }
+        
+        /* Скроллбар */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #1e1e1e;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #22c55e;
+            border-radius: 4px;
         }
     </style>
 </head>
 <body>
-    <header class="bg-[#1e1e1e] shadow-md sticky top-0 z-50" style="padding-top: env(safe-area-inset-top);">
+    <!-- Шапка -->
+    <header class="bg-[#1a1a1a] shadow-lg sticky top-0 z-50">
         <div class="max-w-2xl mx-auto px-4 py-3 flex justify-between items-center">
-            <h1 class="text-xl font-bold text-white">
-                <i class="fas fa-code mr-2 text-green-500"></i>
-                Mbuilds
-            </h1>
-            <div id="auth-buttons" class="flex items-center gap-3"></div>
+            <!-- Логотип -->
+            <div class="flex items-center gap-2">
+                <img src="logo.png" alt="Mbuilds" class="logo" onerror="this.src='https://placehold.co/120x40/22c55e/white?text=Mbuilds'">
+            </div>
+            <div class="flex items-center gap-3">
+                <div id="auth-buttons" class="flex items-center gap-3"></div>
+            </div>
         </div>
     </header>
     
     <main class="max-w-2xl mx-auto px-4 py-4 pb-20">
+        <!-- Экран авторизации -->
         <div id="login-screen" class="flex flex-col items-center justify-center min-h-[70vh]">
             <div class="text-center">
-                <i class="fas fa-users text-6xl text-green-500 mb-6"></i>
+                <img src="logo.png" alt="Mbuilds" class="w-32 mx-auto mb-6" onerror="this.src='https://placehold.co/128x128/22c55e/white?text=M'">
                 <h2 class="text-2xl font-bold mb-4">Добро пожаловать!</h2>
                 <p class="text-gray-400 mb-8">Войдите, чтобы делиться своими проектами</p>
-                <button id="google-login-btn" class="btn-primary text-white px-8 py-3 rounded-lg font-semibold flex items-center gap-3 mx-auto shadow-lg">
+                <button id="google-login-btn" class="btn-primary text-white px-8 py-3 rounded-xl font-semibold flex items-center gap-3 mx-auto shadow-lg">
                     <i class="fab fa-google text-xl"></i>
                     Войти через Google
                 </button>
             </div>
         </div>
         
+        <!-- Лента постов -->
         <div id="feed-screen" style="display: none;">
-            <div id="ban-banner" class="ban-banner" style="display: none;"></div>
             <div id="posts-container" class="space-y-4"></div>
-            <div id="sentinel"></div>
+            <div id="sentinel" style="height: 20px;"></div>
         </div>
     </main>
     
-    <div id="fab-add" class="fab" style="display: none;">
-        <i class="fas fa-plus text-white text-2xl"></i>
-    </div>
-    
+    <!-- Кнопка прокрутки вверх -->
     <div id="scroll-top" class="scroll-top">
         <i class="fas fa-arrow-up text-white text-xl"></i>
     </div>
@@ -285,25 +413,39 @@
             </div>
             <form id="post-form">
                 <div class="mb-4">
-                    <label class="block text-sm mb-2">Ссылка на картинку (необязательно)</label>
-                    <input type="url" id="image-url" placeholder="https://example.com/image.jpg" class="w-full">
+                    <label class="block text-sm mb-2">Ссылка на картинку</label>
+                    <input type="url" id="image-url" placeholder="https://example.com/image.jpg">
                 </div>
                 <div class="mb-4">
-                    <label class="block text-sm mb-2">Описание проекта *</label>
-                    <textarea id="description" rows="3" required class="w-full"></textarea>
+                    <label class="block text-sm mb-2">Описание *</label>
+                    <textarea id="description" rows="3" required></textarea>
                 </div>
                 <div class="mb-4">
                     <label class="block text-sm mb-2">Ссылка на скачивание *</label>
-                    <input type="url" id="download-url" required class="w-full">
+                    <input type="url" id="download-url" required>
                 </div>
                 <div class="mb-6">
-                    <label class="block text-sm mb-2">Ссылка на исходный код (необязательно)</label>
-                    <input type="url" id="source-url" class="w-full">
+                    <label class="block text-sm mb-2">Ссылка на исходный код</label>
+                    <input type="url" id="source-url">
                 </div>
-                <button type="submit" class="btn-primary w-full py-3 rounded-lg font-semibold text-white">
+                <button type="submit" class="btn-primary w-full py-3 rounded-xl font-semibold text-white">
                     Опубликовать
                 </button>
             </form>
+        </div>
+    </div>
+    
+    <!-- Боковое меню (drawer) -->
+    <div id="drawer-overlay" class="drawer-overlay"></div>
+    <div id="drawer" class="drawer">
+        <div class="drawer-header">
+            <div class="flex justify-between items-center">
+                <h3 class="text-lg font-bold">Профиль</h3>
+                <button id="close-drawer" class="text-gray-400 text-2xl leading-none">&times;</button>
+            </div>
+        </div>
+        <div id="drawer-content" class="drawer-content">
+            <!-- Контент будет загружаться динамически -->
         </div>
     </div>
     
@@ -316,7 +458,7 @@
             </div>
             <div id="comments-list" class="max-h-96 overflow-y-auto mb-4"></div>
             <textarea id="new-comment" rows="2" placeholder="Напишите комментарий..." class="w-full"></textarea>
-            <button id="add-comment-btn" class="btn-primary w-full mt-2 py-2 rounded-lg text-white">Отправить</button>
+            <button id="add-comment-btn" class="btn-primary w-full mt-2 py-2 rounded-xl text-white">Отправить</button>
         </div>
     </div>
     
@@ -339,9 +481,7 @@
         const db = getFirestore(app);
         const googleProvider = new GoogleAuthProvider();
         
-        // ГЛАВНЫЙ АДМИН
         const MAIN_ADMIN_EMAIL = "ryzik3489@gmail.com";
-        
         let currentUser = null;
         let allPosts = [];
         let lastDoc = null;
@@ -352,8 +492,7 @@
         
         function showToast(message, isError = false) {
             const toast = document.createElement('div');
-            toast.className = 'toast';
-            toast.style.background = isError ? '#dc2626' : '#22c55e';
+            toast.className = `toast ${isError ? 'error' : ''}`;
             toast.textContent = message;
             document.body.appendChild(toast);
             setTimeout(() => toast.remove(), 3000);
@@ -378,67 +517,24 @@
             return div.innerHTML;
         }
         
-        // Проверка является ли пользователь администратором
         async function checkAdminStatus(email) {
             if (email === MAIN_ADMIN_EMAIL) return true;
             try {
                 const adminRef = doc(db, 'admins', email);
                 const adminSnap = await getDoc(adminRef);
                 return adminSnap.exists();
-            } catch {
-                return false;
-            }
+            } catch { return false; }
         }
         
-        async function checkBanStatus(userId) {
+        async function checkSuperAdminStatus(email) {
+            if (email === MAIN_ADMIN_EMAIL) return true;
             try {
-                const banRef = doc(db, 'banned_users', userId);
-                const banSnap = await getDoc(banRef);
-                if (banSnap.exists()) {
-                    const banData = banSnap.data();
-                    if (banData.expiresAt && banData.expiresAt.toDate() < new Date()) {
-                        await deleteDoc(banRef);
-                        return null;
-                    }
-                    return banData;
-                }
-                return null;
-            } catch { return null; }
+                const superRef = doc(db, 'super_admins', email);
+                const superSnap = await getDoc(superRef);
+                return superSnap.exists();
+            } catch { return false; }
         }
         
-        async function getComments(postId) {
-            const postRef = doc(db, 'posts', postId);
-            const postDoc = await getDoc(postRef);
-            return postDoc.exists() ? (postDoc.data().comments || []) : [];
-        }
-        
-        async function addComment(postId, text) {
-            if (!currentUser) { showToast('Войдите', true); return false; }
-            if (!text.trim()) { showToast('Введите комментарий', true); return false; }
-            
-            const comment = {
-                id: Date.now().toString(),
-                userId: currentUser.uid,
-                userName: currentUser.displayName,
-                userAvatar: currentUser.photoURL || '',
-                text: text.trim(),
-                createdAt: new Date().toISOString()
-            };
-            
-            await updateDoc(doc(db, 'posts', postId), { comments: arrayUnion(comment) });
-            showToast('Комментарий добавлен');
-            return true;
-        }
-        
-        async function toggleLike(postId) {
-            if (!currentUser) { showToast('Войдите', true); return; }
-            const postRef = doc(db, 'posts', postId);
-            const post = (await getDoc(postRef)).data();
-            const hasLiked = post.likes?.includes(currentUser.uid);
-            await updateDoc(postRef, { likes: hasLiked ? arrayRemove(currentUser.uid) : arrayUnion(currentUser.uid) });
-        }
-        
-        // Удаление поста (владелец или админ)
         window.deletePost = async (postId, postAuthorId) => {
             const canDelete = isAdmin || (currentUser && currentUser.uid === postAuthorId);
             if (!canDelete) { showToast('Вы не можете удалить этот пост', true); return; }
@@ -448,6 +544,96 @@
                 showToast('Пост удален');
             }
         };
+        
+        async function toggleLike(postId) {
+            if (!currentUser) { showToast('Войдите', true); return; }
+            const postRef = doc(db, 'posts', postId);
+            const post = (await getDoc(postRef)).data();
+            const hasLiked = post.likes?.includes(currentUser.uid);
+            await updateDoc(postRef, { likes: hasLiked ? arrayRemove(currentUser.uid) : arrayUnion(currentUser.uid) });
+            await loadPosts(true);
+        }
+        
+        async function addComment(postId, text) {
+            if (!currentUser) { showToast('Войдите', true); return false; }
+            if (!text.trim()) { showToast('Введите комментарий', true); return false; }
+            const comment = {
+                id: Date.now().toString(),
+                userId: currentUser.uid,
+                userName: currentUser.displayName,
+                userAvatar: currentUser.photoURL || '',
+                text: text.trim(),
+                createdAt: new Date().toISOString()
+            };
+            await updateDoc(doc(db, 'posts', postId), { comments: arrayUnion(comment) });
+            showToast('Комментарий добавлен');
+            return true;
+        }
+        
+        async function getComments(postId) {
+            const postRef = doc(db, 'posts', postId);
+            const postDoc = await getDoc(postRef);
+            return postDoc.exists() ? (postDoc.data().comments || []) : [];
+        }
+        
+        // Получение проектов пользователя
+        async function getUserProjects(userId) {
+            const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
+            const snapshot = await getDocs(q);
+            return snapshot.docs
+                .map(doc => ({ id: doc.id, ...doc.data() }))
+                .filter(post => post.userId === userId);
+        }
+        
+        // Открытие бокового меню с профилем пользователя
+        async function openUserDrawer(userId, userName, userAvatar) {
+            const projects = await getUserProjects(userId);
+            const drawer = document.getElementById('drawer');
+            const overlay = document.getElementById('drawer-overlay');
+            const content = document.getElementById('drawer-content');
+            
+            content.innerHTML = `
+                <div class="text-center mb-6">
+                    <img src="${userAvatar || `https://ui-avatars.com/api/?background=22c55e&color=fff&name=${userName}`}" class="w-24 h-24 rounded-full mx-auto object-cover border-4 border-green-500">
+                    <h3 class="text-xl font-bold mt-3">${escapeHtml(userName)}</h3>
+                    <p class="text-gray-400 text-sm">${projects.length} проектов</p>
+                </div>
+                <div class="border-t border-gray-700 pt-4">
+                    <h4 class="font-semibold mb-3"><i class="fas fa-code mr-2 text-green-500"></i> Проекты пользователя</h4>
+                    <div id="user-projects-list">
+                        ${projects.length === 0 ? '<p class="text-gray-500 text-center py-4">Нет проектов</p>' : ''}
+                    </div>
+                </div>
+            `;
+            
+            const projectsList = document.getElementById('user-projects-list');
+            if (projects.length > 0) {
+                projectsList.innerHTML = projects.map(project => `
+                    <div class="user-project-item" onclick="window.scrollToPost('${project.id}')">
+                        <p class="font-semibold text-white">${escapeHtml(project.description.substring(0, 50))}${project.description.length > 50 ? '...' : ''}</p>
+                        <p class="text-xs text-gray-400 mt-1">${formatDate(project.createdAt)}</p>
+                    </div>
+                `).join('');
+            }
+            
+            drawer.classList.add('open');
+            overlay.classList.add('active');
+        }
+        
+        window.scrollToPost = (postId) => {
+            closeDrawer();
+            const postElement = document.querySelector(`.card[data-post-id="${postId}"]`);
+            if (postElement) {
+                postElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                postElement.style.transform = 'scale(1.02)';
+                setTimeout(() => { postElement.style.transform = ''; }, 500);
+            }
+        };
+        
+        function closeDrawer() {
+            document.getElementById('drawer').classList.remove('open');
+            document.getElementById('drawer-overlay').classList.remove('active');
+        }
         
         async function loadPosts(reset = true) {
             if (isLoading) return;
@@ -491,21 +677,26 @@
                 const hasImage = post.imageUrl && post.imageUrl.trim().length > 0;
                 
                 return `
-                <div class="card overflow-hidden">
+                <div class="card overflow-hidden" data-post-id="${post.id}">
                     ${hasImage ? `<img src="${post.imageUrl}" class="post-image" onerror="this.style.display='none'">` : ''}
                     <div class="p-4">
                         <div class="flex items-center gap-3 mb-3">
-                            <img src="${post.userAvatar || `https://ui-avatars.com/api/?name=${post.userName}`}" class="avatar">
+                            <img src="${post.userAvatar || `https://ui-avatars.com/api/?background=22c55e&color=fff&name=${post.userName}`}" 
+                                 class="avatar" 
+                                 onclick="openUserDrawer('${post.userId}', '${escapeHtml(post.userName)}', '${post.userAvatar || ''}')">
                             <div class="flex-1">
-                                <p class="font-semibold text-white">${escapeHtml(post.userName)}</p>
+                                <p class="font-semibold text-white cursor-pointer hover:text-green-400" 
+                                   onclick="openUserDrawer('${post.userId}', '${escapeHtml(post.userName)}', '${post.userAvatar || ''}')">
+                                    ${escapeHtml(post.userName)}
+                                </p>
                                 <p class="text-xs text-gray-400">${formatDate(post.createdAt)}</p>
                             </div>
-                            ${canDelete ? `<i class="fas fa-trash delete-btn text-gray-400 hover:text-red-500" onclick="window.deletePost('${post.id}', '${post.userId}')"></i>` : ''}
+                            ${canDelete ? `<i class="fas fa-trash text-gray-400 hover:text-red-500 cursor-pointer" onclick="window.deletePost('${post.id}', '${post.userId}')"></i>` : ''}
                         </div>
                         <p class="text-gray-300 mb-4">${escapeHtml(post.description)}</p>
                         <div class="post-actions flex gap-2 mb-3">
-                            <a href="${post.downloadUrl}" target="_blank" class="btn-primary flex-1 text-center py-2 rounded-lg text-white">Скачать</a>
-                            ${post.sourceCodeUrl ? `<a href="${post.sourceCodeUrl}" target="_blank" class="btn-secondary flex-1 text-center py-2 rounded-lg text-white">GitHub</a>` : ''}
+                            <a href="${post.downloadUrl}" target="_blank" class="btn-primary flex-1 text-center py-2 rounded-xl text-white">Скачать</a>
+                            ${post.sourceCodeUrl ? `<a href="${post.sourceCodeUrl}" target="_blank" class="btn-secondary flex-1 text-center py-2 rounded-xl text-white">GitHub</a>` : ''}
                         </div>
                         <div class="flex items-center gap-4 pt-3 border-t border-gray-700">
                             <button class="like-btn flex items-center gap-2 ${hasLiked ? 'liked' : ''}" data-post-id="${post.id}">
@@ -528,7 +719,7 @@
             `}).join('');
             
             document.querySelectorAll('.like-btn').forEach(btn => {
-                btn.onclick = async () => { await toggleLike(btn.dataset.postId); await loadPosts(true); };
+                btn.onclick = async () => { await toggleLike(btn.dataset.postId); };
             });
             document.querySelectorAll('.comments-btn, .view-all-comments').forEach(btn => {
                 btn.onclick = async () => {
@@ -582,65 +773,69 @@
         };
         
         function closeModal() { document.getElementById('modal').classList.remove('active'); }
-        document.getElementById('fab-add').onclick = () => document.getElementById('modal').classList.add('active');
-        document.getElementById('close-modal').onclick = closeModal;
-        document.getElementById('close-comments-modal').onclick = () => document.getElementById('comments-modal').classList.remove('active');
+        
+        // Обработчики
+        document.getElementById('google-login-btn').onclick = async () => {
+            try {
+                const result = await signInWithPopup(auth, googleProvider);
+                showToast(`Добро пожаловать, ${result.user.displayName}!`);
+            } catch (err) { showToast('Ошибка входа', true); }
+        };
         
         onAuthStateChanged(auth, async (user) => {
             currentUser = user;
             const loginScreen = document.getElementById('login-screen');
             const feedScreen = document.getElementById('feed-screen');
-            const fab = document.getElementById('fab-add');
             const authButtons = document.getElementById('auth-buttons');
             
             if (user) {
-                const banInfo = await checkBanStatus(user.uid);
-                isAdmin = await checkAdminStatus(user.email);
-                
-                if (banInfo) {
-                    document.getElementById('ban-banner').style.display = 'block';
-                    fab.style.display = 'none';
-                } else {
-                    document.getElementById('ban-banner').style.display = 'none';
-                    fab.style.display = 'flex';
-                }
-                
+                isAdmin = await checkAdminStatus(user.email) || await checkSuperAdminStatus(user.email);
                 loginScreen.style.display = 'none';
                 feedScreen.style.display = 'block';
                 
-                // Показываем кнопку админки ТОЛЬКО для админов
                 const adminLink = isAdmin ? `<a href="HER754HGF7.html" class="bg-purple-600 px-3 py-1.5 rounded-lg text-sm"><i class="fas fa-shield-alt"></i> Админ</a>` : '';
                 
                 authButtons.innerHTML = `
-                    <img src="${user.photoURL || ''}" class="w-8 h-8 rounded-full">
+                    <div class="header-add-btn" id="header-add-btn">
+                        <i class="fas fa-plus text-white text-xl"></i>
+                    </div>
+                    <img src="${user.photoURL || ''}" class="w-10 h-10 rounded-full cursor-pointer" onclick="openUserDrawer('${user.uid}', '${escapeHtml(user.displayName)}', '${user.photoURL || ''}')">
                     ${adminLink}
                     <button id="logout-btn" class="bg-red-600 px-3 py-1.5 rounded-lg text-sm">Выйти</button>
                 `;
+                document.getElementById('header-add-btn').onclick = () => document.getElementById('modal').classList.add('active');
                 document.getElementById('logout-btn').onclick = async () => { await signOut(auth); location.reload(); };
-                if (!banInfo) await loadPosts(true);
+                await loadPosts(true);
+                setupInfiniteScroll();
             } else {
                 loginScreen.style.display = 'flex';
                 feedScreen.style.display = 'none';
-                fab.style.display = 'none';
                 authButtons.innerHTML = '';
             }
         });
         
-        document.getElementById('google-login-btn').onclick = async () => {
-            try {
-                await signInWithPopup(auth, googleProvider);
-                showToast('Добро пожаловать!');
-            } catch (err) { showToast('Ошибка входа', true); }
-        };
+        document.getElementById('close-modal').onclick = closeModal;
+        document.getElementById('close-comments-modal').onclick = () => document.getElementById('comments-modal').classList.remove('active');
+        document.getElementById('close-drawer').onclick = closeDrawer;
+        document.getElementById('drawer-overlay').onclick = closeDrawer;
         
+        // Кнопка наверх
         const scrollBtn = document.getElementById('scroll-top');
         window.onscroll = () => scrollBtn.classList.toggle('visible', window.scrollY > 300);
         scrollBtn.onclick = () => window.scrollTo({ top: 0, behavior: 'smooth' });
         
-        const observer = new IntersectionObserver((entries) => {
-            if (entries[0].isIntersecting && !isLoading && hasMore && currentUser) loadPosts(false);
-        }, { threshold: 0.1 });
-        observer.observe(document.getElementById('sentinel'));
+        // Бесконечная прокрутка
+        let observer;
+        function setupInfiniteScroll() {
+            if (observer) observer.disconnect();
+            const sentinel = document.getElementById('sentinel');
+            if (sentinel) {
+                observer = new IntersectionObserver((entries) => {
+                    if (entries[0].isIntersecting && !isLoading && hasMore && currentUser) loadPosts(false);
+                }, { threshold: 0.1 });
+                observer.observe(sentinel);
+            }
+        }
     </script>
 </body>
 </html>
