@@ -23,15 +23,15 @@
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
         import { getFirestore, collection, query, orderBy, getDocs, addDoc, serverTimestamp, limit, startAfter, getDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
         
-        // 👇 ВСТАВЬ СВОЙ КОНФИГ FIREBASE ЗДЕСЬ 👇
-        const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_AUTH_DOMAIN",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_STORAGE_BUCKET",
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-            appId: "YOUR_APP_ID"
-        };
+       const firebaseConfig = {
+  apiKey: "AIzaSyDP5zBGogavsfh4of9wtawRY0FNqZBb8c8",
+  authDomain: "mbuilds-project.firebaseapp.com",
+  projectId: "mbuilds-project",
+  storageBucket: "mbuilds-project.firebasestorage.app",
+  messagingSenderId: "1010423737264",
+  appId: "1:1010423737264:web:41af78a9944261b3fb4475",
+  measurementId: "G-1VWR77G2N0"
+};
         
         // Инициализация Firebase
         const app = initializeApp(firebaseConfig);
