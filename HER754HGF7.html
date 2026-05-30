@@ -7,53 +7,103 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        body { background: #0f0f0f; color: #e0e0e0; }
+        body { background: #0f0f0f; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
         .admin-card { background: #1e1e1e; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
-        .btn-primary { background: #22c55e; }
-        .btn-danger { background: #dc2626; }
-        .user-row { background: #2d2d2d; border-radius: 8px; padding: 12px; margin-bottom: 8px; }
+        .btn-primary { background: #22c55e; padding: 8px 16px; border-radius: 8px; cursor: pointer; border: none; color: white; }
+        .btn-danger { background: #dc2626; padding: 8px 16px; border-radius: 8px; cursor: pointer; border: none; color: white; }
+        .btn-secondary { background: #374151; padding: 8px 16px; border-radius: 8px; cursor: pointer; border: none; color: white; }
+        .user-row { background: #2d2d2d; border-radius: 8px; padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
         .badge-admin { background: #8b5cf6; padding: 2px 8px; border-radius: 12px; font-size: 12px; }
         .badge-banned { background: #dc2626; padding: 2px 8px; border-radius: 12px; font-size: 12px; }
-        .toast { position: fixed; bottom: 20px; right: 20px; background: #22c55e; padding: 12px 20px; border-radius: 8px; z-index: 2000; }
+        .badge-super { background: #f59e0b; padding: 2px 8px; border-radius: 12px; font-size: 12px; }
+        .toast { position: fixed; bottom: 20px; right: 20px; background: #22c55e; padding: 12px 20px; border-radius: 8px; z-index: 2000; animation: slideIn 0.3s ease; }
         .toast.error { background: #dc2626; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; visibility: hidden; transition: all 0.3s; }
         .modal.active { opacity: 1; visibility: visible; }
         .modal-content { background: #1e1e1e; max-width: 500px; width: 90%; border-radius: 16px; padding: 20px; }
         input, select, textarea { background: #2d2d2d; border: 1px solid #3f3f3f; border-radius: 8px; padding: 10px; color: white; width: 100%; margin-bottom: 12px; }
+        .tab { padding: 10px 20px; cursor: pointer; border-bottom: 2px solid transparent; }
+        .tab.active { border-bottom-color: #22c55e; color: #22c55e; }
+        .tab:hover { background: #2d2d2d; }
     </style>
 </head>
 <body>
     <div class="max-w-6xl mx-auto px-4 py-6">
-        <div class="flex justify-between items-center mb-6">
+        <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
             <h1 class="text-2xl font-bold"><i class="fas fa-shield-alt text-green-500 mr-2"></i> Админ панель</h1>
             <div class="flex gap-2">
-                <a href="index.html" class="bg-gray-700 px-4 py-2 rounded-lg">На главную</a>
-                <button id="logout-btn" class="bg-red-600 px-4 py-2 rounded-lg">Выйти</button>
+                <a href="index.html" class="bg-gray-700 px-4 py-2 rounded-lg"><i class="fas fa-home"></i> На главную</a>
+                <button id="logout-btn" class="bg-red-600 px-4 py-2 rounded-lg"><i class="fas fa-sign-out-alt"></i> Выйти</button>
             </div>
         </div>
         
-        <div class="admin-card">
-            <h2 class="text-xl font-bold mb-4">Пользователи</h2>
-            <div id="users-list"></div>
-            <button id="refresh-btn" class="btn-primary px-4 py-2 rounded-lg mt-2">Обновить</button>
+        <!-- Вкладки -->
+        <div class="flex border-b border-gray-700 mb-6">
+            <div class="tab active" data-tab="users"><i class="fas fa-users"></i> Пользователи</div>
+            <div class="tab" data-tab="admins"><i class="fas fa-user-shield"></i> Администраторы</div>
+            <div class="tab" data-tab="banned"><i class="fas fa-ban"></i> Забаненные</div>
+        </div>
+        
+        <!-- Вкладка Пользователи -->
+        <div id="users-tab" class="tab-content">
+            <div class="admin-card">
+                <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
+                    <h2 class="text-xl font-bold"><i class="fas fa-users"></i> Все пользователи</h2>
+                    <button id="refresh-users" class="btn-secondary"><i class="fas fa-sync-alt"></i> Обновить</button>
+                </div>
+                <div id="users-list"></div>
+            </div>
+        </div>
+        
+        <!-- Вкладка Администраторы -->
+        <div id="admins-tab" class="tab-content" style="display: none;">
+            <div class="admin-card">
+                <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
+                    <h2 class="text-xl font-bold"><i class="fas fa-user-shield"></i> Администраторы</h2>
+                    <button id="add-admin-btn" class="btn-primary"><i class="fas fa-plus"></i> Добавить админа</button>
+                </div>
+                <div id="admins-list"></div>
+            </div>
+        </div>
+        
+        <!-- Вкладка Забаненные -->
+        <div id="banned-tab" class="tab-content" style="display: none;">
+            <div class="admin-card">
+                <h2 class="text-xl font-bold mb-4"><i class="fas fa-ban"></i> Забаненные пользователи</h2>
+                <div id="banned-list"></div>
+            </div>
         </div>
     </div>
     
+    <!-- Модалка бана -->
     <div id="ban-modal" class="modal">
         <div class="modal-content">
-            <h3 class="text-xl font-bold mb-4">Блокировка</h3>
-            <div id="ban-user-info"></div>
-            <select id="ban-type">
+            <h3 class="text-xl font-bold mb-4"><i class="fas fa-gavel"></i> Блокировка</h3>
+            <div id="ban-user-info" class="mb-3 p-2 bg-gray-800 rounded"></div>
+            <select id="ban-type" class="w-full">
                 <option value="permanent">Навсегда</option>
                 <option value="temporary">На срок</option>
             </select>
             <div id="duration-field" style="display:none">
-                <input type="number" id="ban-days" placeholder="Количество дней">
+                <input type="number" id="ban-days" placeholder="Количество дней" class="w-full">
             </div>
-            <textarea id="ban-reason" placeholder="Причина блокировки"></textarea>
-            <div class="flex gap-2">
-                <button id="confirm-ban" class="btn-danger flex-1 py-2 rounded-lg">Забанить</button>
-                <button id="close-ban-modal" class="bg-gray-600 flex-1 py-2 rounded-lg">Отмена</button>
+            <textarea id="ban-reason" rows="2" placeholder="Причина блокировки"></textarea>
+            <div class="flex gap-2 mt-3">
+                <button id="confirm-ban" class="btn-danger flex-1">Забанить</button>
+                <button id="close-ban-modal" class="btn-secondary flex-1">Отмена</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Модалка добавления админа -->
+    <div id="add-admin-modal" class="modal">
+        <div class="modal-content">
+            <h3 class="text-xl font-bold mb-4"><i class="fas fa-user-plus"></i> Добавить администратора</h3>
+            <input type="email" id="admin-email" placeholder="Email пользователя" class="w-full">
+            <div class="flex gap-2 mt-3">
+                <button id="confirm-add-admin" class="btn-primary flex-1">Добавить</button>
+                <button id="close-add-admin" class="btn-secondary flex-1">Отмена</button>
             </div>
         </div>
     </div>
@@ -75,9 +125,10 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const MAIN_ADMIN = "ryzik3489@gmail.com";
         
+        const MAIN_ADMIN_EMAIL = "ryzik3489@gmail.com";
         let currentUser = null;
+        let currentTab = "users";
         
         function showToast(msg, isError = false) {
             const toast = document.createElement('div');
@@ -87,7 +138,19 @@
             setTimeout(() => toast.remove(), 3000);
         }
         
-        async function loadUsers() {
+        // Проверка является ли пользователь супер-админом
+        function isSuperAdmin(email) {
+            return email === MAIN_ADMIN_EMAIL;
+        }
+        
+        // Получение списка админов
+        async function getAdmins() {
+            const adminsSnap = await getDocs(collection(db, 'admins'));
+            return adminsSnap.docs.map(doc => ({ email: doc.id, ...doc.data() }));
+        }
+        
+        // Получение всех пользователей из постов
+        async function getAllUsers() {
             const postsSnap = await getDocs(collection(db, 'posts'));
             const usersMap = new Map();
             postsSnap.forEach(doc => {
@@ -101,46 +164,178 @@
                     });
                 }
             });
-            
-            const bannedSnap = await getDocs(collection(db, 'banned_users'));
-            const bannedSet = new Set(bannedSnap.docs.map(d => d.id));
-            
-            const container = document.getElementById('users-list');
-            container.innerHTML = Array.from(usersMap.values()).map(user => `
-                <div class="user-row flex justify-between items-center flex-wrap gap-3">
-                    <div class="flex items-center gap-3">
-                        <img src="${user.userAvatar || ''}" class="w-10 h-10 rounded-full">
-                        <div>
-                            <p class="font-semibold">${user.userName}</p>
-                            <p class="text-sm text-gray-400">${user.userId.slice(0, 20)}...</p>
-                        </div>
-                    </div>
-                    <div class="flex gap-2">
-                        ${bannedSet.has(user.userId) ? 
-                            `<button class="bg-green-600 px-3 py-1 rounded-lg" onclick="window.unbanUser('${user.userId}')">Разбан</button>` :
-                            `<button class="bg-red-600 px-3 py-1 rounded-lg" onclick="window.banUser('${user.userId}', '${user.userName}')">Забанить</button>`
-                        }
-                    </div>
-                </div>
-            `).join('');
+            return Array.from(usersMap.values());
         }
         
-        window.banUser = (userId, userName) => {
+        // Получение забаненных
+        async function getBannedUsers() {
+            const bannedSnap = await getDocs(collection(db, 'banned_users'));
+            return bannedSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        }
+        
+        // Добавление админа (только для супер-админа)
+        async function addAdmin(email) {
+            if (!isSuperAdmin(currentUser.email)) {
+                showToast('Только главный администратор может добавлять админов', true);
+                return false;
+            }
+            try {
+                await setDoc(doc(db, 'admins', email), {
+                    email: email,
+                    addedBy: currentUser.email,
+                    addedAt: Timestamp.now()
+                });
+                showToast(`Администратор ${email} добавлен`);
+                loadTabContent();
+                return true;
+            } catch (error) {
+                showToast('Ошибка при добавлении', true);
+                return false;
+            }
+        }
+        
+        // Удаление админа
+        async function removeAdmin(email) {
+            if (email === MAIN_ADMIN_EMAIL) {
+                showToast('Нельзя удалить главного администратора!', true);
+                return;
+            }
+            if (!isSuperAdmin(currentUser.email)) {
+                showToast('Только главный администратор может удалять админов', true);
+                return;
+            }
+            try {
+                await deleteDoc(doc(db, 'admins', email));
+                showToast(`Администратор ${email} удален`);
+                loadTabContent();
+            } catch (error) {
+                showToast('Ошибка при удалении', true);
+            }
+        }
+        
+        // Бан пользователя
+        async function banUser(userId, userName, banType, days, reason) {
+            if (!isSuperAdmin(currentUser.email) && !(await isAdmin(currentUser.email))) {
+                showToast('Недостаточно прав', true);
+                return;
+            }
+            
+            let expiresAt = null;
+            if (banType === 'temporary' && days) {
+                expiresAt = Timestamp.fromDate(new Date(Date.now() + days * 86400000));
+            }
+            
+            await setDoc(doc(db, 'banned_users', userId), {
+                userId, userName, banType, reason: reason || 'Не указана', expiresAt,
+                bannedBy: currentUser.email,
+                bannedAt: Timestamp.now()
+            });
+            showToast(`Пользователь ${userName} забанен`);
+            loadTabContent();
+        }
+        
+        // Разбан
+        async function unbanUser(userId, userName) {
+            await deleteDoc(doc(db, 'banned_users', userId));
+            showToast(`Пользователь ${userName} разблокирован`);
+            loadTabContent();
+        }
+        
+        async function isAdmin(email) {
+            if (email === MAIN_ADMIN_EMAIL) return true;
+            const adminRef = doc(db, 'admins', email);
+            const adminSnap = await getDoc(adminRef);
+            return adminSnap.exists();
+        }
+        
+        async function loadTabContent() {
+            const users = await getAllUsers();
+            const bannedUsers = await getBannedUsers();
+            const admins = await getAdmins();
+            const bannedIds = new Set(bannedUsers.map(b => b.userId));
+            const adminEmails = new Set(admins.map(a => a.email));
+            adminEmails.add(MAIN_ADMIN_EMAIL);
+            
+            if (currentTab === 'users') {
+                const container = document.getElementById('users-list');
+                container.innerHTML = users.map(user => {
+                    const isUserAdmin = adminEmails.has(user.email);
+                    const isUserBanned = bannedIds.has(user.userId);
+                    return `
+                        <div class="user-row">
+                            <div class="flex items-center gap-3">
+                                <img src="${user.userAvatar || ''}" class="w-10 h-10 rounded-full">
+                                <div>
+                                    <p class="font-semibold">${user.userName}</p>
+                                    <p class="text-sm text-gray-400">${user.email || 'email не указан'}</p>
+                                </div>
+                                ${isUserAdmin ? '<span class="badge-admin"><i class="fas fa-shield-alt"></i> Админ</span>' : ''}
+                                ${isUserBanned ? '<span class="badge-banned"><i class="fas fa-ban"></i> Забанен</span>' : ''}
+                            </div>
+                            <div class="flex gap-2">
+                                ${!isUserAdmin ? (isUserBanned ? 
+                                    `<button class="bg-green-600 px-3 py-1 rounded-lg" onclick="window.unban('${user.userId}', '${user.userName}')"><i class="fas fa-unlock-alt"></i> Разбан</button>` :
+                                    `<button class="bg-red-600 px-3 py-1 rounded-lg" onclick="window.ban('${user.userId}', '${user.userName}')"><i class="fas fa-ban"></i> Забанить</button>`
+                                ) : '<span class="text-gray-500">Админ</span>'}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                if (users.length === 0) container.innerHTML = '<div class="text-center py-8 text-gray-500">Нет пользователей</div>';
+            }
+            
+            if (currentTab === 'admins') {
+                const container = document.getElementById('admins-list');
+                const canManage = isSuperAdmin(currentUser?.email);
+                container.innerHTML = admins.map(admin => `
+                    <div class="user-row">
+                        <div>
+                            <p class="font-semibold">${admin.email}</p>
+                            <p class="text-sm text-gray-400">Добавлен: ${admin.addedAt?.toDate().toLocaleDateString() || 'Недавно'}</p>
+                        </div>
+                        ${canManage && admin.email !== MAIN_ADMIN_EMAIL ? 
+                            `<button class="bg-red-600 px-3 py-1 rounded-lg" onclick="window.removeAdmin('${admin.email}')"><i class="fas fa-trash"></i> Удалить</button>` :
+                            admin.email === MAIN_ADMIN_EMAIL ? '<span class="badge-super"><i class="fas fa-crown"></i> Главный админ</span>' : ''
+                        }
+                    </div>
+                `).join('');
+                if (admins.length === 0) container.innerHTML = '<div class="text-center py-8 text-gray-500">Нет администраторов</div>';
+            }
+            
+            if (currentTab === 'banned') {
+                const container = document.getElementById('banned-list');
+                container.innerHTML = bannedUsers.map(ban => `
+                    <div class="user-row">
+                        <div>
+                            <p class="font-semibold">${ban.userName}</p>
+                            <p class="text-sm text-red-400">Причина: ${ban.reason}</p>
+                            <p class="text-xs text-gray-400">${ban.expiresAt ? `до ${ban.expiresAt.toDate().toLocaleDateString()}` : 'навсегда'}</p>
+                        </div>
+                        <button class="bg-green-600 px-3 py-1 rounded-lg" onclick="window.unban('${ban.userId}', '${ban.userName}')"><i class="fas fa-unlock-alt"></i> Разбан</button>
+                    </div>
+                `).join('');
+                if (bannedUsers.length === 0) container.innerHTML = '<div class="text-center py-8 text-gray-500">Нет забаненных пользователей</div>';
+            }
+        }
+        
+        // Глобальные функции для onclick
+        window.ban = (userId, userName) => {
             const modal = document.getElementById('ban-modal');
-            document.getElementById('ban-user-info').innerHTML = `<p>Пользователь: <strong>${userName}</strong></p>`;
+            document.getElementById('ban-user-info').innerHTML = `<i class="fas fa-user"></i> Пользователь: <strong>${userName}</strong>`;
             modal.dataset.userId = userId;
             modal.dataset.userName = userName;
             modal.classList.add('active');
         };
         
-        window.unbanUser = async (userId) => {
-            if (confirm('Разблокировать пользователя?')) {
-                await deleteDoc(doc(db, 'banned_users', userId));
-                showToast('Пользователь разблокирован');
-                loadUsers();
-            }
+        window.unban = async (userId, userName) => {
+            if (confirm(`Разблокировать ${userName}?`)) await unbanUser(userId, userName);
         };
         
+        window.removeAdmin = async (email) => {
+            if (confirm(`Удалить администратора ${email}?`)) await removeAdmin(email);
+        };
+        
+        // Обработчики модалок
         document.getElementById('ban-type').onchange = (e) => {
             document.getElementById('duration-field').style.display = e.target.value === 'temporary' ? 'block' : 'none';
         };
@@ -150,43 +345,65 @@
             const userId = modal.dataset.userId;
             const userName = modal.dataset.userName;
             const banType = document.getElementById('ban-type').value;
-            const reason = document.getElementById('ban-reason').value || 'Не указана';
-            
-            let expiresAt = null;
-            if (banType === 'temporary') {
-                const days = parseInt(document.getElementById('ban-days').value);
-                if (days) expiresAt = Timestamp.fromDate(new Date(Date.now() + days * 86400000));
-            }
-            
-            await setDoc(doc(db, 'banned_users', userId), {
-                userId, userName, banType, reason, expiresAt,
-                bannedBy: currentUser.email,
-                bannedAt: Timestamp.now()
-            });
-            showToast(`Пользователь ${userName} забанен`);
+            const days = document.getElementById('ban-days').value;
+            const reason = document.getElementById('ban-reason').value;
+            await banUser(userId, userName, banType, days, reason);
             modal.classList.remove('active');
-            loadUsers();
+            document.getElementById('ban-reason').value = '';
         };
         
         document.getElementById('close-ban-modal').onclick = () => {
             document.getElementById('ban-modal').classList.remove('active');
         };
         
-        document.getElementById('refresh-btn').onclick = loadUsers;
+        document.getElementById('add-admin-btn').onclick = () => {
+            if (!isSuperAdmin(currentUser?.email)) {
+                showToast('Только главный администратор может добавлять админов', true);
+                return;
+            }
+            document.getElementById('add-admin-modal').classList.add('active');
+        };
         
+        document.getElementById('confirm-add-admin').onclick = async () => {
+            const email = document.getElementById('admin-email').value.trim();
+            if (email) await addAdmin(email);
+            document.getElementById('add-admin-modal').classList.remove('active');
+            document.getElementById('admin-email').value = '';
+        };
+        
+        document.getElementById('close-add-admin').onclick = () => {
+            document.getElementById('add-admin-modal').classList.remove('active');
+        };
+        
+        // Переключение вкладок
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.onclick = () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                currentTab = tab.dataset.tab;
+                document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+                document.getElementById(`${currentTab}-tab`).style.display = 'block';
+                loadTabContent();
+            };
+        });
+        
+        document.getElementById('refresh-users').onclick = () => loadTabContent();
+        document.getElementById('logout-btn').onclick = async () => { await signOut(auth); window.location.href = 'index.html'; };
+        
+        // Авторизация
         onAuthStateChanged(auth, async (user) => {
-            if (user && user.email === MAIN_ADMIN) {
+            if (user && await isAdmin(user.email)) {
                 currentUser = user;
-                await loadUsers();
+                await loadTabContent();
             } else if (user) {
-                showToast('Доступ запрещен', true);
+                showToast('У вас нет доступа к админ-панели', true);
                 setTimeout(() => window.location.href = 'index.html', 2000);
             } else {
                 try {
                     const result = await signInWithPopup(auth, new GoogleAuthProvider());
-                    if (result.user.email === MAIN_ADMIN) {
+                    if (await isAdmin(result.user.email)) {
                         currentUser = result.user;
-                        await loadUsers();
+                        await loadTabContent();
                     } else {
                         showToast('Доступ запрещен', true);
                         setTimeout(() => window.location.href = 'index.html', 2000);
@@ -194,11 +411,6 @@
                 } catch (err) { console.error(err); }
             }
         });
-        
-        document.getElementById('logout-btn').onclick = async () => {
-            await signOut(auth);
-            window.location.href = 'index.html';
-        };
     </script>
 </body>
 </html>
