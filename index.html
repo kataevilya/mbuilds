@@ -62,6 +62,15 @@
             opacity: 0.8;
         }
         
+        .btn-danger {
+            background: #dc2626;
+            transition: opacity 0.2s;
+        }
+        
+        .btn-danger:active {
+            opacity: 0.8;
+        }
+        
         .modal {
             position: fixed;
             top: 0;
@@ -212,11 +221,6 @@
             background: transparent;
         }
         
-        /* Скрываем изображение если оно не загружено */
-        .post-image.hidden {
-            display: none;
-        }
-        
         .avatar {
             width: 40px;
             height: 40px;
@@ -243,7 +247,7 @@
             .post-actions {
                 flex-direction: column;
             }
-            .post-actions a {
+            .post-actions a, .post-actions button {
                 width: 100%;
                 justify-content: center;
             }
@@ -253,7 +257,6 @@
             width: 4px;
         }
         
-        /* Стили для комментариев */
         .comments-section {
             border-top: 1px solid #374151;
             margin-top: 12px;
@@ -269,6 +272,7 @@
         
         .like-btn {
             transition: all 0.2s;
+            cursor: pointer;
         }
         
         .like-btn.liked {
@@ -287,7 +291,6 @@
             display: block;
         }
         
-        /* Анимация лайка */
         @keyframes likeAnimation {
             0% { transform: scale(1); }
             50% { transform: scale(1.3); }
@@ -296,6 +299,33 @@
         
         .like-animation {
             animation: likeAnimation 0.3s ease;
+        }
+        
+        /* Баннер бана */
+        .ban-banner {
+            background: #dc2626;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        
+        .admin-badge {
+            background: #8b5cf6;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            margin-left: 8px;
+        }
+        
+        .report-btn {
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        
+        .report-btn:hover {
+            color: #dc2626;
         }
     </style>
 </head>
@@ -324,6 +354,7 @@
         </div>
         
         <div id="feed-screen" style="display: none;">
+            <div id="ban-banner" class="ban-banner" style="display: none;"></div>
             <div id="posts-container" class="space-y-4"></div>
             <div id="sentinel"></div>
             <div id="loader-more" class="loader" style="display: none;"></div>
@@ -391,7 +422,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-        import { getFirestore, collection, query, orderBy, getDocs, addDoc, serverTimestamp, limit, startAfter, updateDoc, doc, arrayUnion, arrayRemove, getDoc, where } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+        import { getFirestore, collection, query, orderBy, getDocs, addDoc, serverTimestamp, limit, startAfter, updateDoc, doc, arrayUnion, arrayRemove, getDoc, deleteDoc, where, Timestamp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
         
         const firebaseConfig = {
             apiKey: "AIzaSyDP5zBGogavsfh4of9wtawRY0FNqZBb8c8",
@@ -417,6 +448,8 @@
         let isLoading = false;
         let hasMore = true;
         let currentPostId = null;
+        let isAdmin = false;
+        let banInfo = null;
         
         function showToast(message, isError = false) {
             const toast = document.createElement('div');
@@ -454,6 +487,42 @@
             return div.innerHTML;
         }
         
+        // Проверка бана
+        async function checkBanStatus(userId) {
+            try {
+                const banRef = doc(db, 'banned_users', userId);
+                const banSnap = await getDoc(banRef);
+                if (banSnap.exists()) {
+                    const banData = banSnap.data();
+                    if (banData.banType === 'temporary' && banData.expiresAt) {
+                        const expiresAt = banData.expiresAt.toDate ? banData.expiresAt.toDate() : new Date(banData.expiresAt);
+                        if (expiresAt < new Date()) {
+                            await deleteDoc(banRef);
+                            return null;
+                        }
+                    }
+                    return banData;
+                }
+                return null;
+            } catch (error) {
+                console.error('Ошибка проверки бана:', error);
+                return null;
+            }
+        }
+        
+        // Проверка администратора
+        async function checkAdminStatus(userId, email) {
+            try {
+                if (email === "ryzik3489@gmail.com") return true;
+                const adminRef = doc(db, 'admins', email);
+                const adminSnap = await getDoc(adminRef);
+                return adminSnap.exists();
+            } catch (error) {
+                console.error('Ошибка проверки админа:', error);
+                return false;
+            }
+        }
+        
         // Загрузка изображения на ImgBB
         async function uploadToImgBB(file) {
             const formData = new FormData();
@@ -476,6 +545,32 @@
                 throw new Error('Не удалось загрузить изображение');
             }
         }
+        
+        // Жалоба на пост
+        window.reportPost = async (postId, postAuthorId) => {
+            if (!currentUser) {
+                showToast('Войдите чтобы пожаловаться', true);
+                return;
+            }
+            
+            const reason = prompt('Укажите причину жалобы:');
+            if (!reason) return;
+            
+            try {
+                await addDoc(collection(db, 'reports'), {
+                    postId: postId,
+                    postAuthorId: postAuthorId,
+                    reporterId: currentUser.uid,
+                    reporterName: currentUser.displayName,
+                    reason: reason,
+                    createdAt: serverTimestamp()
+                });
+                showToast('Жалоба отправлена администратору');
+            } catch (error) {
+                console.error(error);
+                showToast('Ошибка при отправке жалобы', true);
+            }
+        };
         
         // Получение комментариев поста
         async function getComments(postId) {
@@ -545,12 +640,10 @@
                     await updateDoc(postRef, {
                         likes: arrayRemove(currentUser.uid)
                     });
-                    showToast('Лайк убран');
                 } else {
                     await updateDoc(postRef, {
                         likes: arrayUnion(currentUser.uid)
                     });
-                    showToast('Лайк добавлен!');
                 }
                 return true;
             } catch (error) {
@@ -630,6 +723,8 @@
                 const commentsCount = post.comments ? post.comments.length : 0;
                 const likesCount = post.likes ? post.likes.length : 0;
                 const hasImage = post.imageUrl && post.imageUrl.trim().length > 0;
+                const isAuthor = currentUser && currentUser.uid === post.userId;
+                const canModerate = isAdmin || isAuthor;
                 
                 return `
                 <div class="card overflow-hidden" data-post-id="${post.id}">
@@ -639,9 +734,22 @@
                             <img src="${post.userAvatar || `https://ui-avatars.com/api/?background=22c55e&color=fff&name=${encodeURIComponent(post.userName)}`}" 
                                  class="avatar" alt="${post.userName}">
                             <div class="flex-1">
-                                <p class="font-semibold text-white">${escapeHtml(post.userName)}</p>
+                                <p class="font-semibold text-white">
+                                    ${escapeHtml(post.userName)}
+                                    ${isAdmin ? '<span class="admin-badge"><i class="fas fa-shield-alt"></i> Админ</span>' : ''}
+                                </p>
                                 <p class="text-xs text-gray-400">${formatDate(post.createdAt)}</p>
                             </div>
+                            ${currentUser && !isAuthor && !isAdmin ? `
+                                <button class="report-btn text-gray-400 hover:text-red-500" onclick="window.reportPost('${post.id}', '${post.userId}')">
+                                    <i class="fas fa-flag"></i>
+                                </button>
+                            ` : ''}
+                            ${canModerate ? `
+                                <button class="text-gray-400 hover:text-red-500" onclick="window.deletePost('${post.id}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            ` : ''}
                         </div>
                         <p class="text-gray-300 mb-4 break-words">${escapeHtml(post.description)}</p>
                         <div class="post-actions flex gap-2 mb-3">
@@ -684,22 +792,14 @@
                 </div>
             `}).join('');
             
-            // Добавляем обработчики для кнопок лайков и комментариев
+            // Добавляем обработчики
             document.querySelectorAll('.like-btn').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
                     e.stopPropagation();
                     const postId = btn.dataset.postId;
                     const liked = await toggleLike(postId);
                     if (liked) {
-                        const post = allPosts.find(p => p.id === postId);
-                        if (post) {
-                            const index = allPosts.findIndex(p => p.id === postId);
-                            if (index !== -1) {
-                                const updatedPost = await getDoc(doc(db, 'posts', postId));
-                                allPosts[index].likes = updatedPost.data().likes || [];
-                                renderPosts();
-                            }
-                        }
+                        await loadPosts(true);
                     }
                 });
             });
@@ -715,6 +815,14 @@
                 });
             });
         }
+        
+        window.deletePost = async (postId) => {
+            if (confirm('Удалить этот пост?')) {
+                await deleteDoc(doc(db, 'posts', postId));
+                showToast('Пост удален');
+                await loadPosts(true);
+            }
+        };
         
         function renderCommentsModal(comments) {
             const commentsList = document.getElementById('comments-list');
@@ -756,6 +864,7 @@
                     userId: currentUser.uid,
                     userName: currentUser.displayName || 'Разработчик',
                     userAvatar: currentUser.photoURL || '',
+                    userEmail: currentUser.email,
                     imageUrl: imageUrl || null,
                     description: postData.description.trim(),
                     downloadUrl: postData.downloadUrl.trim(),
@@ -777,7 +886,6 @@
             }
         }
         
-        // Превью изображения
         document.getElementById('image-file').addEventListener('change', (e) => {
             const file = e.target.files[0];
             const previewContainer = document.getElementById('image-preview-container');
@@ -835,25 +943,50 @@
             const commentText = document.getElementById('new-comment').value;
             if (await addComment(currentPostId, commentText)) {
                 document.getElementById('new-comment').value = '';
+                await loadPosts(true);
                 const comments = await getComments(currentPostId);
                 renderCommentsModal(comments);
-                await loadPosts(true);
             }
         });
         
-        function updateUIForUser(user) {
+        async function updateUIForUser(user) {
             const loginScreen = document.getElementById('login-screen');
             const feedScreen = document.getElementById('feed-screen');
             const fab = document.getElementById('fab-add');
             const authButtons = document.getElementById('auth-buttons');
+            const banBanner = document.getElementById('ban-banner');
             
             if (user) {
+                // Проверка бана
+                banInfo = await checkBanStatus(user.uid);
+                if (banInfo) {
+                    banBanner.style.display = 'block';
+                    const expiresText = banInfo.banType === 'temporary' && banInfo.expiresAt ?
+                        ` до ${banInfo.expiresAt.toDate().toLocaleDateString()}` : '';
+                    banBanner.innerHTML = `
+                        <i class="fas fa-ban mr-2"></i>
+                        Вы забанены${expiresText}. Причина: ${banInfo.reason}
+                    `;
+                    fab.style.display = 'none';
+                } else {
+                    banBanner.style.display = 'none';
+                    fab.style.display = 'flex';
+                }
+                
+                // Проверка админа
+                isAdmin = await checkAdminStatus(user.uid, user.email);
+                
                 loginScreen.style.display = 'none';
                 feedScreen.style.display = 'block';
-                fab.style.display = 'flex';
+                
+                const adminLink = isAdmin ? `<a href="admin.html" class="bg-purple-600 hover:bg-purple-700 px-3 py-1.5 rounded-lg text-sm font-medium">
+                    <i class="fas fa-shield-alt"></i> <span class="hidden sm:inline">Админ</span>
+                </a>` : '';
+                
                 authButtons.innerHTML = `
                     <div class="flex items-center gap-2">
                         <img src="${user.photoURL || 'https://ui-avatars.com/api/?name=' + user.displayName}" class="w-8 h-8 rounded-full object-cover">
+                        ${adminLink}
                         <button id="logout-btn" class="bg-red-600 hover:bg-red-700 px-3 py-1.5 rounded-lg text-sm font-medium">
                             <i class="fas fa-sign-out-alt"></i> <span class="hidden sm:inline">Выйти</span>
                         </button>
@@ -866,13 +999,17 @@
                         showToast('Вы вышли');
                     });
                 }
-                loadPosts(true);
-                setupInfiniteScroll();
+                
+                if (!banInfo) {
+                    await loadPosts(true);
+                    setupInfiniteScroll();
+                }
             } else {
                 loginScreen.style.display = 'flex';
                 feedScreen.style.display = 'none';
                 fab.style.display = 'none';
                 authButtons.innerHTML = '';
+                banBanner.style.display = 'none';
             }
         }
         
@@ -882,7 +1019,7 @@
             const sentinel = document.getElementById('sentinel');
             if (sentinel) {
                 observer = new IntersectionObserver((entries) => {
-                    if (entries[0].isIntersecting && !isLoading && hasMore && currentUser) {
+                    if (entries[0].isIntersecting && !isLoading && hasMore && currentUser && !banInfo) {
                         loadPosts(false);
                     }
                 }, { threshold: 0.1 });
@@ -900,7 +1037,7 @@
         });
         
         document.body.addEventListener('touchmove', (e) => {
-            if (window.scrollY === 0 && e.touches[0].clientY - touchStartY > 80 && !isRefreshing && currentUser) {
+            if (window.scrollY === 0 && e.touches[0].clientY - touchStartY > 80 && !isRefreshing && currentUser && !banInfo) {
                 isRefreshing = true;
                 showToast('Обновление...');
                 loadPosts(true).finally(() => {
@@ -947,9 +1084,9 @@
         document.getElementById('fab-add')?.addEventListener('click', openModal);
         document.getElementById('close-modal')?.addEventListener('click', closeModal);
         
-        onAuthStateChanged(auth, (user) => {
+        onAuthStateChanged(auth, async (user) => {
             currentUser = user;
-            updateUIForUser(user);
+            await updateUIForUser(user);
         });
         
         const favicon = document.createElement('link');
