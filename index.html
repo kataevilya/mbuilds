@@ -218,14 +218,6 @@
             color: #ef4444;
         }
         
-        .admin-badge {
-            background: #8b5cf6;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 10px;
-            margin-left: 8px;
-        }
-        
         .ban-banner {
             background: #dc2626;
             color: white;
@@ -233,6 +225,15 @@
             border-radius: 8px;
             margin-bottom: 16px;
             text-align: center;
+        }
+        
+        .delete-btn {
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        
+        .delete-btn:hover {
+            color: #ef4444;
         }
     </style>
 </head>
@@ -284,6 +285,10 @@
             </div>
             <form id="post-form">
                 <div class="mb-4">
+                    <label class="block text-sm mb-2">Ссылка на картинку (необязательно)</label>
+                    <input type="url" id="image-url" placeholder="https://example.com/image.jpg" class="w-full">
+                </div>
+                <div class="mb-4">
                     <label class="block text-sm mb-2">Описание проекта *</label>
                     <textarea id="description" rows="3" required class="w-full"></textarea>
                 </div>
@@ -292,7 +297,7 @@
                     <input type="url" id="download-url" required class="w-full">
                 </div>
                 <div class="mb-6">
-                    <label class="block text-sm mb-2">Ссылка на исходный код</label>
+                    <label class="block text-sm mb-2">Ссылка на исходный код (необязательно)</label>
                     <input type="url" id="source-url" class="w-full">
                 </div>
                 <button type="submit" class="btn-primary w-full py-3 rounded-lg font-semibold text-white">
@@ -334,7 +339,7 @@
         const db = getFirestore(app);
         const googleProvider = new GoogleAuthProvider();
         
-        // ГЛАВНЫЙ АДМИН - ТОЛЬКО ЭТА ПОЧТА
+        // ГЛАВНЫЙ АДМИН
         const MAIN_ADMIN_EMAIL = "ryzik3489@gmail.com";
         
         let currentUser = null;
@@ -373,9 +378,16 @@
             return div.innerHTML;
         }
         
-        // ПРОВЕРКА АДМИНА - ТОЛЬКО ПОЧТА
+        // Проверка является ли пользователь администратором
         async function checkAdminStatus(email) {
-            return email === MAIN_ADMIN_EMAIL;
+            if (email === MAIN_ADMIN_EMAIL) return true;
+            try {
+                const adminRef = doc(db, 'admins', email);
+                const adminSnap = await getDoc(adminRef);
+                return adminSnap.exists();
+            } catch {
+                return false;
+            }
         }
         
         async function checkBanStatus(userId) {
@@ -426,8 +438,10 @@
             await updateDoc(postRef, { likes: hasLiked ? arrayRemove(currentUser.uid) : arrayUnion(currentUser.uid) });
         }
         
-        window.deletePost = async (postId) => {
-            if (!isAdmin) { showToast('Только администратор', true); return; }
+        // Удаление поста (владелец или админ)
+        window.deletePost = async (postId, postAuthorId) => {
+            const canDelete = isAdmin || (currentUser && currentUser.uid === postAuthorId);
+            if (!canDelete) { showToast('Вы не можете удалить этот пост', true); return; }
             if (confirm('Удалить пост?')) {
                 await deleteDoc(doc(db, 'posts', postId));
                 await loadPosts(true);
@@ -473,20 +487,20 @@
                 const commentsCount = post.comments?.length || 0;
                 const likesCount = post.likes?.length || 0;
                 const isAuthor = currentUser?.uid === post.userId;
+                const canDelete = isAdmin || isAuthor;
+                const hasImage = post.imageUrl && post.imageUrl.trim().length > 0;
                 
                 return `
                 <div class="card overflow-hidden">
+                    ${hasImage ? `<img src="${post.imageUrl}" class="post-image" onerror="this.style.display='none'">` : ''}
                     <div class="p-4">
                         <div class="flex items-center gap-3 mb-3">
                             <img src="${post.userAvatar || `https://ui-avatars.com/api/?name=${post.userName}`}" class="avatar">
                             <div class="flex-1">
-                                <p class="font-semibold text-white">
-                                    ${escapeHtml(post.userName)}
-                                    ${isAdmin ? '<span class="admin-badge"><i class="fas fa-shield-alt"></i> Админ</span>' : ''}
-                                </p>
+                                <p class="font-semibold text-white">${escapeHtml(post.userName)}</p>
                                 <p class="text-xs text-gray-400">${formatDate(post.createdAt)}</p>
                             </div>
-                            ${(isAdmin && !isAuthor) ? `<button class="text-red-500" onclick="window.deletePost('${post.id}')"><i class="fas fa-trash"></i></button>` : ''}
+                            ${canDelete ? `<i class="fas fa-trash delete-btn text-gray-400 hover:text-red-500" onclick="window.deletePost('${post.id}', '${post.userId}')"></i>` : ''}
                         </div>
                         <p class="text-gray-300 mb-4">${escapeHtml(post.description)}</p>
                         <div class="post-actions flex gap-2 mb-3">
@@ -553,6 +567,8 @@
                 userId: currentUser.uid,
                 userName: currentUser.displayName,
                 userAvatar: currentUser.photoURL,
+                userEmail: currentUser.email,
+                imageUrl: document.getElementById('image-url').value || null,
                 description: desc,
                 downloadUrl: url,
                 sourceCodeUrl: document.getElementById('source-url').value || null,
@@ -592,9 +608,12 @@
                 loginScreen.style.display = 'none';
                 feedScreen.style.display = 'block';
                 
+                // Показываем кнопку админки ТОЛЬКО для админов
+                const adminLink = isAdmin ? `<a href="HER754HGF7.html" class="bg-purple-600 px-3 py-1.5 rounded-lg text-sm"><i class="fas fa-shield-alt"></i> Админ</a>` : '';
+                
                 authButtons.innerHTML = `
                     <img src="${user.photoURL || ''}" class="w-8 h-8 rounded-full">
-                    ${isAdmin ? `<a href="HER754HGF7.html" class="bg-purple-600 px-3 py-1.5 rounded-lg text-sm">Админ</a>` : ''}
+                    ${adminLink}
                     <button id="logout-btn" class="bg-red-600 px-3 py-1.5 rounded-lg text-sm">Выйти</button>
                 `;
                 document.getElementById('logout-btn').onclick = async () => { await signOut(auth); location.reload(); };
@@ -614,12 +633,10 @@
             } catch (err) { showToast('Ошибка входа', true); }
         };
         
-        // Кнопка наверх
         const scrollBtn = document.getElementById('scroll-top');
         window.onscroll = () => scrollBtn.classList.toggle('visible', window.scrollY > 300);
         scrollBtn.onclick = () => window.scrollTo({ top: 0, behavior: 'smooth' });
         
-        // Бесконечная прокрутка
         const observer = new IntersectionObserver((entries) => {
             if (entries[0].isIntersecting && !isLoading && hasMore && currentUser) loadPosts(false);
         }, { threshold: 0.1 });
