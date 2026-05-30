@@ -10,10 +10,7 @@
     <meta name="description" content="Социальная сеть для разработчиков — публикуй свои проекты">
     <title>Mbuilds Project — Соцсеть для разработчиков</title>
     
-    <!-- TailwindCSS через CDN (только для разработки, но для демо подойдет) -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Font Awesome 6 Free -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     
     <style>
@@ -33,7 +30,6 @@
             padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
         }
         
-        /* Кастомные стили поверх Tailwind */
         .card {
             background: #1e1e1e;
             border-radius: 12px;
@@ -66,7 +62,6 @@
             opacity: 0.8;
         }
         
-        /* Модальное окно */
         .modal {
             position: fixed;
             top: 0;
@@ -106,7 +101,6 @@
             transform: scale(1);
         }
         
-        /* Кнопка + */
         .fab {
             position: fixed;
             bottom: 24px;
@@ -129,7 +123,6 @@
             background: #16a34a;
         }
         
-        /* Кнопка наверх */
         .scroll-top {
             position: fixed;
             bottom: 24px;
@@ -153,7 +146,6 @@
             visibility: visible;
         }
         
-        /* Лоадер */
         .loader {
             width: 40px;
             height: 40px;
@@ -168,7 +160,6 @@
             to { transform: rotate(360deg); }
         }
         
-        /* Поля ввода */
         input, textarea {
             background: #2d2d2d;
             border: 1px solid #3f3f3f;
@@ -185,7 +176,6 @@
             border-color: #22c55e;
         }
         
-        /* Уведомления */
         .toast {
             position: fixed;
             bottom: 20px;
@@ -197,8 +187,11 @@
             border-radius: 8px;
             z-index: 2000;
             animation: slideUp 0.3s ease;
-            white-space: nowrap;
             font-size: 14px;
+            max-width: 90%;
+            text-align: center;
+            white-space: normal;
+            word-wrap: break-word;
         }
         
         @keyframes slideUp {
@@ -212,7 +205,6 @@
             }
         }
         
-        /* Изображение поста */
         .post-image {
             width: 100%;
             max-height: 400px;
@@ -220,7 +212,6 @@
             background: #2d2d2d;
         }
         
-        /* Аватар */
         .avatar {
             width: 40px;
             height: 40px;
@@ -236,19 +227,13 @@
             body {
                 font-size: 18px;
             }
-            .container-custom {
-                max-width: 600px;
-                margin: 0 auto;
-            }
         }
         
-        /* Бесконечный скролл триггер */
         #sentinel {
             height: 20px;
             margin: 20px 0;
         }
         
-        /* Адаптивные кнопки в карточке */
         @media (max-width: 640px) {
             .post-actions {
                 flex-direction: column;
@@ -259,34 +244,33 @@
             }
         }
         
-        /* Скрыть скроллбар для модалки на мобилках но оставить функционал */
         .modal-content::-webkit-scrollbar {
             width: 4px;
         }
         
-        /* Заглушка для favicon */
-        .favicon-placeholder {
-            display: none;
+        .error-border {
+            border-color: #dc2626 !important;
+        }
+        
+        .error-message {
+            color: #dc2626;
+            font-size: 12px;
+            margin-top: 4px;
         }
     </style>
 </head>
 <body class="antialiased">
-    <!-- Шапка -->
     <header class="bg-[#1e1e1e] shadow-md sticky top-0 z-50" style="padding-top: env(safe-area-inset-top);">
         <div class="max-w-2xl mx-auto px-4 py-3 flex justify-between items-center">
             <h1 class="text-xl font-bold text-white">
                 <i class="fas fa-code mr-2 text-green-500"></i>
                 Mbuilds
             </h1>
-            <div id="auth-buttons" class="flex items-center gap-3">
-                <!-- Динамически добавляется кнопка выхода -->
-            </div>
+            <div id="auth-buttons" class="flex items-center gap-3"></div>
         </div>
     </header>
     
-    <!-- Основной контент -->
     <main class="max-w-2xl mx-auto px-4 py-4 pb-20">
-        <!-- Экран авторизации -->
         <div id="login-screen" class="flex flex-col items-center justify-center min-h-[70vh]">
             <div class="text-center">
                 <i class="fas fa-users text-6xl text-green-500 mb-6"></i>
@@ -299,27 +283,21 @@
             </div>
         </div>
         
-        <!-- Лента постов (изначально скрыта) -->
         <div id="feed-screen" style="display: none;">
-            <div id="posts-container" class="space-y-4">
-                <!-- Посты будут загружаться сюда -->
-            </div>
+            <div id="posts-container" class="space-y-4"></div>
             <div id="sentinel"></div>
             <div id="loader-more" class="loader" style="display: none;"></div>
         </div>
     </main>
     
-    <!-- Кнопка + (плавающая) -->
     <div id="fab-add" class="fab" style="display: none;">
         <i class="fas fa-plus text-white text-2xl"></i>
     </div>
     
-    <!-- Кнопка наверх -->
     <div id="scroll-top" class="scroll-top">
         <i class="fas fa-arrow-up text-white text-xl"></i>
     </div>
     
-    <!-- Модальное окно создания поста -->
     <div id="modal" class="modal">
         <div class="modal-content">
             <div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-700">
@@ -333,11 +311,12 @@
                 </div>
                 <div class="mb-4">
                     <label class="block text-sm mb-2 text-gray-300">Описание проекта *</label>
-                    <textarea id="description" rows="3" placeholder="Расскажите о проекте..." required class="w-full resize-none"></textarea>
+                    <textarea id="description" rows="3" placeholder="Расскажите о проекте..." required class="w-full"></textarea>
                 </div>
                 <div class="mb-4">
                     <label class="block text-sm mb-2 text-gray-300">Ссылка на скачивание *</label>
                     <input type="url" id="download-url" placeholder="https://drive.google.com/..." required class="w-full">
+                    <p class="text-xs text-gray-500 mt-1">Пример: https://drive.google.com, https://dropbox.com и т.д.</p>
                 </div>
                 <div class="mb-6">
                     <label class="block text-sm mb-2 text-gray-300">Ссылка на исходный код (необязательно)</label>
@@ -350,14 +329,11 @@
         </div>
     </div>
     
-    <!-- Firebase SDKs -->
     <script type="module">
-        // Импорт Firebase модулей
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-        import { getFirestore, collection, query, orderBy, getDocs, addDoc, serverTimestamp, limit, startAfter } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+        import { getFirestore, collection, query, orderBy, getDocs, addDoc, serverTimestamp, limit, startAfter, setDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
         
-        // Firebase конфигурация
         const firebaseConfig = {
             apiKey: "AIzaSyDP5zBGogavsfh4of9wtawRY0FNqZBb8c8",
             authDomain: "mbuilds-project.firebaseapp.com",
@@ -368,20 +344,17 @@
             measurementId: "G-1VWR77G2N0"
         };
         
-        // Инициализация Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
         const googleProvider = new GoogleAuthProvider();
         
-        // Глобальные переменные
         let currentUser = null;
         let allPosts = [];
         let lastDoc = null;
         let isLoading = false;
         let hasMore = true;
         
-        // Вспомогательные функции
         function showToast(message, isError = false) {
             const toast = document.createElement('div');
             toast.className = 'toast';
@@ -393,8 +366,12 @@
         
         function formatDate(timestamp) {
             if (!timestamp) return 'Недавно';
-            const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-            return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+            try {
+                const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+                return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+            } catch {
+                return 'Недавно';
+            }
         }
         
         function escapeHtml(str) {
@@ -404,7 +381,6 @@
             return div.innerHTML;
         }
         
-        // Загрузка постов с пагинацией
         async function loadPosts(reset = true) {
             if (isLoading) return;
             if (reset) {
@@ -412,7 +388,7 @@
                 hasMore = true;
                 allPosts = [];
                 const container = document.getElementById('posts-container');
-                if (container) container.innerHTML = '';
+                if (container) container.innerHTML = '<div class="loader"></div>';
             }
             if (!hasMore && !reset) return;
             
@@ -447,14 +423,17 @@
                 }
             } catch (error) {
                 console.error('Ошибка загрузки постов:', error);
-                showToast('Ошибка загрузки ленты', true);
+                showToast('Ошибка загрузки ленты: ' + error.message, true);
+                const container = document.getElementById('posts-container');
+                if (container && reset) {
+                    container.innerHTML = '<div class="text-center py-10 text-red-500"><i class="fas fa-exclamation-triangle text-4xl mb-2"></i><p>Ошибка загрузки. Проверьте подключение к интернету и правила Firestore.</p></div>';
+                }
             } finally {
                 isLoading = false;
                 if (loaderMore) loaderMore.style.display = 'none';
             }
         }
         
-        // Рендер постов
         function renderPosts() {
             const container = document.getElementById('posts-container');
             if (!container) return;
@@ -497,36 +476,90 @@
             `).join('');
         }
         
-        // Создание поста
         async function createPost(postData) {
             if (!currentUser) {
                 showToast('Необходимо войти', true);
                 return false;
             }
             
+            // Валидация
+            if (!postData.description || postData.description.trim().length === 0) {
+                showToast('Введите описание проекта', true);
+                return false;
+            }
+            
+            if (!postData.downloadUrl || postData.downloadUrl.trim().length === 0) {
+                showToast('Введите ссылку на скачивание', true);
+                return false;
+            }
+            
+            // Проверка URL
             try {
-                await addDoc(collection(db, 'posts'), {
+                new URL(postData.downloadUrl);
+            } catch {
+                showToast('Неверный формат ссылки на скачивание. Пример: https://example.com/file.zip', true);
+                return false;
+            }
+            
+            if (postData.imageUrl && postData.imageUrl.trim().length > 0) {
+                try {
+                    new URL(postData.imageUrl);
+                } catch {
+                    showToast('Неверный формат ссылки на картинку', true);
+                    return false;
+                }
+            }
+            
+            if (postData.sourceCodeUrl && postData.sourceCodeUrl.trim().length > 0) {
+                try {
+                    new URL(postData.sourceCodeUrl);
+                } catch {
+                    showToast('Неверный формат ссылки на исходный код', true);
+                    return false;
+                }
+            }
+            
+            try {
+                showToast('Публикация...');
+                
+                const post = {
                     userId: currentUser.uid,
                     userName: currentUser.displayName || 'Разработчик',
                     userAvatar: currentUser.photoURL || '',
                     imageUrl: postData.imageUrl || '',
-                    description: postData.description,
-                    downloadUrl: postData.downloadUrl,
+                    description: postData.description.trim(),
+                    downloadUrl: postData.downloadUrl.trim(),
                     sourceCodeUrl: postData.sourceCodeUrl || '',
                     createdAt: serverTimestamp()
-                });
-                showToast('Пост опубликован!');
+                };
+                
+                console.log('Отправка поста:', post);
+                const docRef = await addDoc(collection(db, 'posts'), post);
+                console.log('Пост создан с ID:', docRef.id);
+                
+                showToast('Пост успешно опубликован!');
                 closeModal();
                 await loadPosts(true);
                 return true;
             } catch (error) {
-                console.error('Ошибка создания поста:', error);
-                showToast('Ошибка публикации: ' + error.message, true);
+                console.error('Детальная ошибка создания поста:', error);
+                let errorMessage = 'Ошибка публикации: ';
+                
+                if (error.code === 'permission-denied') {
+                    errorMessage += 'Нет прав доступа. Проверьте правила безопасности Firestore.';
+                } else if (error.code === 'unavailable') {
+                    errorMessage += 'Сервис недоступен. Проверьте подключение.';
+                } else if (error.code === 'not-found') {
+                    errorMessage += 'Коллекция "posts" не найдена. Создайте её в Firestore.';
+                } else {
+                    errorMessage += error.message;
+                }
+                
+                showToast(errorMessage, true);
                 return false;
             }
         }
         
-        // Модалка
         const modal = document.getElementById('modal');
         function openModal() {
             if (!currentUser) {
@@ -541,24 +574,29 @@
             document.getElementById('post-form').reset();
         }
         
-        // Обработка формы
         document.getElementById('post-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const description = document.getElementById('description').value.trim();
-            const downloadUrl = document.getElementById('download-url').value.trim();
-            if (!description || !downloadUrl) {
-                showToast('Заполните обязательные поля', true);
+            const description = document.getElementById('description').value;
+            const downloadUrl = document.getElementById('download-url').value;
+            
+            if (!description.trim()) {
+                showToast('Введите описание проекта', true);
                 return;
             }
+            
+            if (!downloadUrl.trim()) {
+                showToast('Введите ссылку на скачивание', true);
+                return;
+            }
+            
             await createPost({
-                imageUrl: document.getElementById('image-url').value.trim(),
+                imageUrl: document.getElementById('image-url').value,
                 description: description,
                 downloadUrl: downloadUrl,
-                sourceCodeUrl: document.getElementById('source-url').value.trim()
+                sourceCodeUrl: document.getElementById('source-url').value
             });
         });
         
-        // UI переключение авторизации
         function updateUIForUser(user) {
             const loginScreen = document.getElementById('login-screen');
             const feedScreen = document.getElementById('feed-screen');
@@ -566,6 +604,7 @@
             const authButtons = document.getElementById('auth-buttons');
             
             if (user) {
+                console.log('Пользователь вошел:', user.email);
                 loginScreen.style.display = 'none';
                 feedScreen.style.display = 'block';
                 fab.style.display = 'flex';
@@ -587,6 +626,7 @@
                 loadPosts(true);
                 setupInfiniteScroll();
             } else {
+                console.log('Пользователь не авторизован');
                 loginScreen.style.display = 'flex';
                 feedScreen.style.display = 'none';
                 fab.style.display = 'none';
@@ -594,7 +634,6 @@
             }
         }
         
-        // Бесконечная прокрутка
         let observer;
         function setupInfiniteScroll() {
             if (observer) observer.disconnect();
@@ -609,7 +648,6 @@
             }
         }
         
-        // Pull-to-refresh
         let touchStartY = 0;
         let isRefreshing = false;
         
@@ -629,7 +667,6 @@
             }
         });
         
-        // Кнопка наверх
         const scrollTopBtn = document.getElementById('scroll-top');
         window.addEventListener('scroll', () => {
             if (window.scrollY > 300) {
@@ -643,106 +680,36 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
         
-        // Закрытие модалки по клику вне контента
         modal.addEventListener('click', (e) => {
             if (e.target === modal) closeModal();
         });
         
-        // События кнопок
-        const googleLoginBtn = document.getElementById('google-login-btn');
-        if (googleLoginBtn) {
-            googleLoginBtn.addEventListener('click', async () => {
-                try {
-                    const result = await signInWithPopup(auth, googleProvider);
-                    showToast(`Добро пожаловать, ${result.user.displayName}!`);
-                } catch (err) {
-                    console.error(err);
-                    showToast('Ошибка входа: ' + err.message, true);
-                }
-            });
-        }
+        document.getElementById('google-login-btn')?.addEventListener('click', async () => {
+            try {
+                const result = await signInWithPopup(auth, googleProvider);
+                showToast(`Добро пожаловать, ${result.user.displayName}!`);
+            } catch (err) {
+                console.error(err);
+                showToast('Ошибка входа: ' + err.message, true);
+            }
+        });
         
-        const fabAdd = document.getElementById('fab-add');
-        if (fabAdd) {
-            fabAdd.addEventListener('click', openModal);
-        }
+        document.getElementById('fab-add')?.addEventListener('click', openModal);
+        document.getElementById('close-modal')?.addEventListener('click', closeModal);
         
-        const closeModalBtn = document.getElementById('close-modal');
-        if (closeModalBtn) {
-            closeModalBtn.addEventListener('click', closeModal);
-        }
-        
-        // Слушатель состояния авторизации
         onAuthStateChanged(auth, (user) => {
             currentUser = user;
             updateUIForUser(user);
         });
         
-        // PWA Service Worker
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                const swCode = `
-                    self.addEventListener('install', event => {
-                        self.skipWaiting();
-                        event.waitUntil(
-                            caches.open('mbuilds-cache-v1').then(cache => {
-                                return cache.addAll([
-                                    '/',
-                                    '/index.html'
-                                ]);
-                            })
-                        );
-                    });
-                    self.addEventListener('fetch', event => {
-                        event.respondWith(
-                            caches.match(event.request).then(response => {
-                                return response || fetch(event.request);
-                            })
-                        );
-                    });
-                `;
-                const blob = new Blob([swCode], {type: 'application/javascript'});
-                const swUrl = URL.createObjectURL(blob);
-                navigator.serviceWorker.register(swUrl).then(reg => {
-                    console.log('Service Worker registered');
-                }).catch(err => console.log('SW failed:', err));
-            });
-        }
-        
-        // Манифест для PWA
-        const manifest = {
-            name: "Mbuilds Project",
-            short_name: "Mbuilds",
-            start_url: ".",
-            display: "standalone",
-            theme_color: "#121212",
-            background_color: "#121212",
-            icons: [
-                {
-                    src: "https://placehold.co/192x192/22c55e/white?text=M",
-                    sizes: "192x192",
-                    type: "image/png"
-                },
-                {
-                    src: "https://placehold.co/512x512/22c55e/white?text=M",
-                    sizes: "512x512",
-                    type: "image/png"
-                }
-            ]
-        };
-        
-        const manifestBlob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
-        const manifestURL = URL.createObjectURL(manifestBlob);
-        const linkManifest = document.createElement('link');
-        linkManifest.rel = 'manifest';
-        linkManifest.href = manifestURL;
-        document.head.appendChild(linkManifest);
-        
-        // Создаем фавикон (заглушка)
+        // Создаем фавикон
         const favicon = document.createElement('link');
         favicon.rel = 'icon';
         favicon.href = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">💻</text></svg>';
         document.head.appendChild(favicon);
+        
+        // Проверка соединения с Firebase
+        console.log('Firebase инициализирован');
     </script>
 </body>
 </html>
