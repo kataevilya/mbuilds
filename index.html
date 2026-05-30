@@ -4,44 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
     <meta name="theme-color" content="#121212">
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Mbuilds">
     <meta name="description" content="Социальная сеть для разработчиков — публикуй свои проекты">
     <title>Mbuilds Project — Соцсеть для разработчиков</title>
     
-    <!-- TailwindCSS CDN (только базовые утилиты, кастомные стили добавим) -->
+    <!-- TailwindCSS через CDN (только для разработки, но для демо подойдет) -->
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Font Awesome 6 Free -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    
-    <!-- Firebase SDKs -->
-    <script type="module">
-        // Импорт Firebase модулей
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-        import { getFirestore, collection, query, orderBy, getDocs, addDoc, serverTimestamp, limit, startAfter, getDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
-        
-       const firebaseConfig = {
-  apiKey: "AIzaSyDP5zBGogavsfh4of9wtawRY0FNqZBb8c8",
-  authDomain: "mbuilds-project.firebaseapp.com",
-  projectId: "mbuilds-project",
-  storageBucket: "mbuilds-project.firebasestorage.app",
-  messagingSenderId: "1010423737264",
-  appId: "1:1010423737264:web:41af78a9944261b3fb4475",
-  measurementId: "G-1VWR77G2N0"
-};
-        
-        // Инициализация Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const googleProvider = new GoogleAuthProvider();
-        
-        // Сохраняем сервисы в глобальный объект для доступа из других скриптов
-        window.firebaseServices = { auth, db, signInWithPopup, googleProvider, onAuthStateChanged, signOut, collection, query, orderBy, getDocs, addDoc, serverTimestamp, limit, startAfter, getDoc, doc };
-    </script>
     
     <style>
         * {
@@ -290,6 +263,11 @@
         .modal-content::-webkit-scrollbar {
             width: 4px;
         }
+        
+        /* Заглушка для favicon */
+        .favicon-placeholder {
+            display: none;
+        }
     </style>
 </head>
 <body class="antialiased">
@@ -372,17 +350,36 @@
         </div>
     </div>
     
-    <script>
+    <!-- Firebase SDKs -->
+    <script type="module">
+        // Импорт Firebase модулей
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+        import { getFirestore, collection, query, orderBy, getDocs, addDoc, serverTimestamp, limit, startAfter } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+        
+        // Firebase конфигурация
+        const firebaseConfig = {
+            apiKey: "AIzaSyDP5zBGogavsfh4of9wtawRY0FNqZBb8c8",
+            authDomain: "mbuilds-project.firebaseapp.com",
+            projectId: "mbuilds-project",
+            storageBucket: "mbuilds-project.firebasestorage.app",
+            messagingSenderId: "1010423737264",
+            appId: "1:1010423737264:web:41af78a9944261b3fb4475",
+            measurementId: "G-1VWR77G2N0"
+        };
+        
+        // Инициализация Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const googleProvider = new GoogleAuthProvider();
+        
         // Глобальные переменные
         let currentUser = null;
         let allPosts = [];
         let lastDoc = null;
         let isLoading = false;
         let hasMore = true;
-        let refreshIndicator = false;
-        
-        // Получаем Firebase сервисы из модуля
-        const { auth, db, signInWithPopup, googleProvider, onAuthStateChanged, signOut, collection, query, orderBy, getDocs, addDoc, serverTimestamp, limit: limitQuery, startAfter, getDoc, doc } = window.firebaseServices;
         
         // Вспомогательные функции
         function showToast(message, isError = false) {
@@ -400,6 +397,13 @@
             return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
         }
         
+        function escapeHtml(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+        
         // Загрузка постов с пагинацией
         async function loadPosts(reset = true) {
             if (isLoading) return;
@@ -407,19 +411,21 @@
                 lastDoc = null;
                 hasMore = true;
                 allPosts = [];
-                document.getElementById('posts-container').innerHTML = '';
+                const container = document.getElementById('posts-container');
+                if (container) container.innerHTML = '';
             }
             if (!hasMore && !reset) return;
             
             isLoading = true;
-            if (!reset) document.getElementById('loader-more').style.display = 'block';
+            const loaderMore = document.getElementById('loader-more');
+            if (!reset && loaderMore) loaderMore.style.display = 'block';
             
             try {
                 let q;
                 if (lastDoc) {
-                    q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'), startAfter(lastDoc), limitQuery(10));
+                    q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'), startAfter(lastDoc), limit(10));
                 } else {
-                    q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'), limitQuery(10));
+                    q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'), limit(10));
                 }
                 
                 const querySnapshot = await getDocs(q);
@@ -434,14 +440,17 @@
                     allPosts = reset ? newPosts : [...allPosts, ...newPosts];
                     renderPosts();
                 } else if (reset && newPosts.length === 0) {
-                    document.getElementById('posts-container').innerHTML = '<div class="text-center py-10 text-gray-500"><i class="fas fa-inbox text-4xl mb-2"></i><p>Пока нет постов. Будьте первым!</p></div>';
+                    const container = document.getElementById('posts-container');
+                    if (container) {
+                        container.innerHTML = '<div class="text-center py-10 text-gray-500"><i class="fas fa-inbox text-4xl mb-2"></i><p>Пока нет постов. Будьте первым!</p></div>';
+                    }
                 }
             } catch (error) {
                 console.error('Ошибка загрузки постов:', error);
                 showToast('Ошибка загрузки ленты', true);
             } finally {
                 isLoading = false;
-                document.getElementById('loader-more').style.display = 'none';
+                if (loaderMore) loaderMore.style.display = 'none';
             }
         }
         
@@ -488,19 +497,6 @@
             `).join('');
         }
         
-        // Экранирование HTML
-        function escapeHtml(str) {
-            if (!str) return '';
-            return str.replace(/[&<>]/g, function(m) {
-                if (m === '&') return '&amp;';
-                if (m === '<') return '&lt;';
-                if (m === '>') return '&gt;';
-                return m;
-            }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
-                return c;
-            });
-        }
-        
         // Создание поста
         async function createPost(postData) {
             if (!currentUser) {
@@ -521,12 +517,11 @@
                 });
                 showToast('Пост опубликован!');
                 closeModal();
-                // Обновляем ленту сбросом
                 await loadPosts(true);
                 return true;
             } catch (error) {
                 console.error('Ошибка создания поста:', error);
-                showToast('Ошибка публикации', true);
+                showToast('Ошибка публикации: ' + error.message, true);
                 return false;
             }
         }
@@ -540,6 +535,7 @@
             }
             modal.classList.add('active');
         }
+        
         function closeModal() {
             modal.classList.remove('active');
             document.getElementById('post-form').reset();
@@ -581,10 +577,13 @@
                         </button>
                     </div>
                 `;
-                document.getElementById('logout-btn')?.addEventListener('click', async () => {
-                    await signOut(auth);
-                    showToast('Вы вышли');
-                });
+                const logoutBtn = document.getElementById('logout-btn');
+                if (logoutBtn) {
+                    logoutBtn.addEventListener('click', async () => {
+                        await signOut(auth);
+                        showToast('Вы вышли');
+                    });
+                }
                 loadPosts(true);
                 setupInfiniteScroll();
             } else {
@@ -600,22 +599,26 @@
         function setupInfiniteScroll() {
             if (observer) observer.disconnect();
             const sentinel = document.getElementById('sentinel');
-            observer = new IntersectionObserver((entries) => {
-                if (entries[0].isIntersecting && !isLoading && hasMore && currentUser) {
-                    loadPosts(false);
-                }
-            }, { threshold: 0.1 });
-            if (sentinel) observer.observe(sentinel);
+            if (sentinel) {
+                observer = new IntersectionObserver((entries) => {
+                    if (entries[0].isIntersecting && !isLoading && hasMore && currentUser) {
+                        loadPosts(false);
+                    }
+                }, { threshold: 0.1 });
+                observer.observe(sentinel);
+            }
         }
         
         // Pull-to-refresh
         let touchStartY = 0;
         let isRefreshing = false;
+        
         document.body.addEventListener('touchstart', (e) => {
             if (window.scrollY === 0) {
                 touchStartY = e.touches[0].clientY;
             }
         });
+        
         document.body.addEventListener('touchmove', (e) => {
             if (window.scrollY === 0 && e.touches[0].clientY - touchStartY > 80 && !isRefreshing && currentUser) {
                 isRefreshing = true;
@@ -635,6 +638,7 @@
                 scrollTopBtn.classList.remove('visible');
             }
         });
+        
         scrollTopBtn.addEventListener('click', () => {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
@@ -645,18 +649,28 @@
         });
         
         // События кнопок
-        document.getElementById('google-login-btn')?.addEventListener('click', async () => {
-            try {
-                const result = await signInWithPopup(auth, googleProvider);
-                showToast(`Добро пожаловать, ${result.user.displayName}!`);
-            } catch (err) {
-                console.error(err);
-                showToast('Ошибка входа', true);
-            }
-        });
+        const googleLoginBtn = document.getElementById('google-login-btn');
+        if (googleLoginBtn) {
+            googleLoginBtn.addEventListener('click', async () => {
+                try {
+                    const result = await signInWithPopup(auth, googleProvider);
+                    showToast(`Добро пожаловать, ${result.user.displayName}!`);
+                } catch (err) {
+                    console.error(err);
+                    showToast('Ошибка входа: ' + err.message, true);
+                }
+            });
+        }
         
-        document.getElementById('fab-add')?.addEventListener('click', openModal);
-        document.getElementById('close-modal')?.addEventListener('click', closeModal);
+        const fabAdd = document.getElementById('fab-add');
+        if (fabAdd) {
+            fabAdd.addEventListener('click', openModal);
+        }
+        
+        const closeModalBtn = document.getElementById('close-modal');
+        if (closeModalBtn) {
+            closeModalBtn.addEventListener('click', closeModal);
+        }
         
         // Слушатель состояния авторизации
         onAuthStateChanged(auth, (user) => {
@@ -664,7 +678,7 @@
             updateUIForUser(user);
         });
         
-        // Инициализация Service Worker для PWA
+        // PWA Service Worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 const swCode = `
@@ -695,7 +709,7 @@
             });
         }
         
-        // Манифест для PWA (динамический)
+        // Манифест для PWA
         const manifest = {
             name: "Mbuilds Project",
             short_name: "Mbuilds",
@@ -716,12 +730,19 @@
                 }
             ]
         };
+        
         const manifestBlob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
         const manifestURL = URL.createObjectURL(manifestBlob);
         const linkManifest = document.createElement('link');
         linkManifest.rel = 'manifest';
         linkManifest.href = manifestURL;
         document.head.appendChild(linkManifest);
+        
+        // Создаем фавикон (заглушка)
+        const favicon = document.createElement('link');
+        favicon.rel = 'icon';
+        favicon.href = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">💻</text></svg>';
+        document.head.appendChild(favicon);
     </script>
 </body>
 </html>
