@@ -62,15 +62,6 @@
             opacity: 0.8;
         }
         
-        .btn-danger {
-            background: #dc2626;
-            transition: opacity 0.2s;
-        }
-        
-        .btn-danger:active {
-            opacity: 0.8;
-        }
-        
         .modal {
             position: fixed;
             top: 0;
@@ -301,7 +292,6 @@
             animation: likeAnimation 0.3s ease;
         }
         
-        /* Баннер бана */
         .ban-banner {
             background: #dc2626;
             color: white;
@@ -422,7 +412,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-        import { getFirestore, collection, query, orderBy, getDocs, addDoc, serverTimestamp, limit, startAfter, updateDoc, doc, arrayUnion, arrayRemove, getDoc, deleteDoc, where, Timestamp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+        import { getFirestore, collection, query, orderBy, getDocs, addDoc, serverTimestamp, limit, startAfter, updateDoc, doc, arrayUnion, arrayRemove, getDoc, deleteDoc, Timestamp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
         
         const firebaseConfig = {
             apiKey: "AIzaSyDP5zBGogavsfh4of9wtawRY0FNqZBb8c8",
@@ -439,8 +429,8 @@
         const db = getFirestore(app);
         const googleProvider = new GoogleAuthProvider();
         
-        // ImgBB API Key (нужно зарегистрироваться на https://imgbb.com и получить ключ)
-        const IMGBB_API_KEY = "YOUR_IMGBB_API_KEY"; // Замените на свой API ключ
+        // ГЛАВНЫЙ АДМИН - ТОЛЬКО ЭТА ПОЧТА
+        const MAIN_ADMIN_EMAIL = "ryzik3489@gmail.com";
         
         let currentUser = null;
         let allPosts = [];
@@ -487,7 +477,12 @@
             return div.innerHTML;
         }
         
-        // Проверка бана
+        // ПРОВЕРКА АДМИНА - ТОЛЬКО ПОЧТА ryzik3489@gmail.com
+        async function checkAdminStatus(email) {
+            // Только главный админ
+            return email === MAIN_ADMIN_EMAIL;
+        }
+        
         async function checkBanStatus(userId) {
             try {
                 const banRef = doc(db, 'banned_users', userId);
@@ -510,21 +505,9 @@
             }
         }
         
-        // Проверка администратора
-        async function checkAdminStatus(userId, email) {
-            try {
-                if (email === "ryzik3489@gmail.com") return true;
-                const adminRef = doc(db, 'admins', email);
-                const adminSnap = await getDoc(adminRef);
-                return adminSnap.exists();
-            } catch (error) {
-                console.error('Ошибка проверки админа:', error);
-                return false;
-            }
-        }
-        
         // Загрузка изображения на ImgBB
         async function uploadToImgBB(file) {
+            const IMGBB_API_KEY = "YOUR_IMGBB_API_KEY";
             const formData = new FormData();
             formData.append('image', file);
             formData.append('key', IMGBB_API_KEY);
@@ -546,7 +529,6 @@
             }
         }
         
-        // Жалоба на пост
         window.reportPost = async (postId, postAuthorId) => {
             if (!currentUser) {
                 showToast('Войдите чтобы пожаловаться', true);
@@ -572,7 +554,18 @@
             }
         };
         
-        // Получение комментариев поста
+        window.deletePost = async (postId) => {
+            if (!isAdmin) {
+                showToast('Только администратор может удалять посты', true);
+                return;
+            }
+            if (confirm('Удалить этот пост?')) {
+                await deleteDoc(doc(db, 'posts', postId));
+                showToast('Пост удален');
+                await loadPosts(true);
+            }
+        };
+        
         async function getComments(postId) {
             try {
                 const postRef = doc(db, 'posts', postId);
@@ -587,7 +580,6 @@
             }
         }
         
-        // Добавление комментария
         async function addComment(postId, commentText) {
             if (!currentUser) {
                 showToast('Войдите чтобы комментировать', true);
@@ -622,7 +614,6 @@
             }
         }
         
-        // Лайк/дизлайк поста
         async function toggleLike(postId) {
             if (!currentUser) {
                 showToast('Войдите чтобы лайкнуть', true);
@@ -709,7 +700,7 @@
             }
         }
         
-        async function renderPosts() {
+        function renderPosts() {
             const container = document.getElementById('posts-container');
             if (!container) return;
             
@@ -724,7 +715,8 @@
                 const likesCount = post.likes ? post.likes.length : 0;
                 const hasImage = post.imageUrl && post.imageUrl.trim().length > 0;
                 const isAuthor = currentUser && currentUser.uid === post.userId;
-                const canModerate = isAdmin || isAuthor;
+                // ТОЛЬКО ГЛАВНЫЙ АДМИН может удалять любые посты
+                const canDelete = isAdmin;
                 
                 return `
                 <div class="card overflow-hidden" data-post-id="${post.id}">
@@ -745,7 +737,7 @@
                                     <i class="fas fa-flag"></i>
                                 </button>
                             ` : ''}
-                            ${canModerate ? `
+                            ${canDelete ? `
                                 <button class="text-gray-400 hover:text-red-500" onclick="window.deletePost('${post.id}')">
                                     <i class="fas fa-trash"></i>
                                 </button>
@@ -792,15 +784,12 @@
                 </div>
             `}).join('');
             
-            // Добавляем обработчики
             document.querySelectorAll('.like-btn').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
                     e.stopPropagation();
                     const postId = btn.dataset.postId;
-                    const liked = await toggleLike(postId);
-                    if (liked) {
-                        await loadPosts(true);
-                    }
+                    await toggleLike(postId);
+                    await loadPosts(true);
                 });
             });
             
@@ -815,14 +804,6 @@
                 });
             });
         }
-        
-        window.deletePost = async (postId) => {
-            if (confirm('Удалить этот пост?')) {
-                await deleteDoc(doc(db, 'posts', postId));
-                showToast('Пост удален');
-                await loadPosts(true);
-            }
-        };
         
         function renderCommentsModal(comments) {
             const commentsList = document.getElementById('comments-list');
@@ -908,6 +889,10 @@
                 showToast('Сначала войдите', true);
                 return;
             }
+            if (banInfo) {
+                showToast('Вы забанены и не можете создавать посты', true);
+                return;
+            }
             modal.classList.add('active');
         }
         
@@ -973,8 +958,8 @@
                     fab.style.display = 'flex';
                 }
                 
-                // Проверка админа
-                isAdmin = await checkAdminStatus(user.uid, user.email);
+                // ПРОВЕРКА АДМИНА - ТОЛЬКО ПОЧТА ryzik3489@gmail.com
+                isAdmin = await checkAdminStatus(user.email);
                 
                 loginScreen.style.display = 'none';
                 feedScreen.style.display = 'block';
