@@ -46,6 +46,15 @@
             background: #374151;
         }
         
+        .btn-faq {
+            background: #f59e0b;
+            transition: all 0.2s;
+        }
+        
+        .btn-faq:active {
+            transform: scale(0.98);
+        }
+        
         .modal {
             position: fixed;
             top: 0;
@@ -472,7 +481,6 @@
             setTimeout(() => toast.remove(), 3000);
         }
         
-        // Загрузка изображения на ImgBB
         async function uploadToImgBB(file) {
             const formData = new FormData();
             formData.append('image', file);
@@ -495,7 +503,6 @@
             }
         }
         
-        // Превью изображения
         document.getElementById('image-file').addEventListener('change', (e) => {
             const file = e.target.files[0];
             const previewContainer = document.getElementById('image-preview-container');
@@ -596,9 +603,7 @@
                 .filter(post => post.userId === userId);
         }
         
-        // Глобальная функция для открытия профиля
         window.openUserDrawer = async (userId, userName, userAvatar) => {
-            console.log('Открываем профиль:', userId, userName);
             const projects = await getUserProjects(userId);
             const drawer = document.getElementById('drawer');
             const overlay = document.getElementById('drawer-overlay');
@@ -831,6 +836,9 @@
                     <div class="header-add-btn" id="header-add-btn">
                         <i class="fas fa-plus text-white text-xl"></i>
                     </div>
+                    <a href="Mbuilds Project.html" class="bg-orange-500 hover:bg-orange-600 px-4 py-1.5 rounded-lg text-sm font-medium transition">
+                        <i class="fas fa-question-circle mr-1"></i> FAQ
+                    </a>
                     <img src="${user.photoURL || ''}" class="w-10 h-10 rounded-full cursor-pointer object-cover" 
                          onclick="openUserDrawer('${user.uid}', '${escapeHtml(user.displayName)}', '${user.photoURL || ''}')"
                          onerror="this.src='https://ui-avatars.com/api/?background=22c55e&color=fff&name=${encodeURIComponent(user.displayName)}'">
