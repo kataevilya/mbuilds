@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <meta name="theme-color" content="#121212">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>Mbuilds Project</title>
+    <!-- Font Awesome only for optional fallback icon, but we use real logo now -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+       <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            background: #121212;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-size: 16px;
+            line-height: 1.5;
+            color: #e0e0e0;
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+        }
+        
+        /* Preserve original styling mood but minimal */
+        .bg-\[\#1e1e1e\] {
+            background-color: #1e1e1e;
+        }
+        .shadow-md {
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .sticky {
+            position: sticky;
+        }
+        .top-0 {
+            top: 0px;
+        }
+        .z-50 {
+            z-index: 50;
+        }
+        .mx-auto {
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .flex {
+            display: flex;
+        }
+        .items-center {
+            align-items: center;
+        }
+        .justify-between {
+            justify-content: space-between;
+        }
+        .max-w-2xl {
+            max-width: 42rem;
+        }
+        .px-4 {
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+        .py-3 {
+            padding-top: 0.75rem;
+            padding-bottom: 0.75rem;
+        }
+        .text-white {
+            color: #ffffff;
+        }
+        
+        /* Logo image styling */
+        .logo-img {
+            height: 36px;
+            width: auto;
+            max-width: 160px;
+            object-fit: contain;
+            display: block;
+        }
+        
+        /* Hero text styling - NO green outline, NO gradient, NO border-left, just clean white text */
+        .hero-left {
+            text-align: left;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            padding-left: 0.5rem;
+        }
+        .main-headline {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #ffffff;           /* чисто белый, без зелёного градиента */
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+        }
+        .sub-headline {
+            font-size: 1.15rem;
+            color: #cbd5e1;          /* светлый нейтральный оттенок, без зелени */
+            font-weight: 400;
+            margin-top: 0.75rem;
+            letter-spacing: -0.01em;
+            /* убрали зелёную полоску border-left */
+        }
+        
+        /* Скрываем все лишние интерактивные элементы, чтобы не было скриптов и контента */
+        .fab, .scroll-top, #modal, #comments-modal {
+            display: none !important;
+        }
+        
+        #posts-container, #sentinel, #feed-screen, #login-screen, #ban-banner {
+            display: none;
+        }
+        
+        main {
+            display: block;
+        }
+        
+        /* Убираем любые возможные зелёные акценты, которые могли быть унаследованы */
+        .text-green-500, .btn-primary, .like-btn.liked, .delete-btn:hover {
+            /* не влияют на текст, но на всякий случай */
+        }
+    </style>
+</head>
+<body>
+    <header class="bg-[#1e1e1e] shadow-md sticky top-0 z-50" style="padding-top: env(safe-area-inset-top);">
+        <div class="max-w-2xl mx-auto px-4 py-3 flex justify-between items-center">
+            <!-- Логотип слева: используем реальный PNG файл logo.png -->
+            <div class="flex items-center">
+                <img src="logo.png" alt="Mbuilds Logo" class="logo-img" onerror="this.onerror=null; this.src='https://placehold.co/120x40/1e1e1e/22c55e?text=Mbuilds';">
+            </div>
+            <!-- Пустой блок справа для сохранения макета, без кнопок -->
+            <div></div>
+        </div>
+    </header>
+    
+    <main class="max-w-2xl mx-auto px-4 py-4 pb-20">
+        <!-- Первая надпись: сверху слева, большая -->
+        <div class="hero-left">
+            <div class="main-headline">M-Host FAQ</div>
+            <!-- Вторая надпись: чуть ниже и меньшего размера -->
+            <div class="sub-headline">1 - правила платформы:</div>
+            <div class="sub-headline">За пропоганду нац!зма и сл@стики даётся бан на 8 дней</div>
+            <div class="sub-headline">За порнографию даётся бан на 10 дней</div>
+            <div class="sub-headline">За пропоганду насилия дается бан на 8 дней</div>
+            <div class="sub-headline">За оскорбления родных даётся бан на 10 дней</div>
+            <div class="sub-headline">За выставление вирусного ПО не предупредив о том что это вирусная программа , даётся бан на 5 дней</div>
+            <div class="sub-headline">2 - для чего нужен этот сайт?</div>
+            <div class="sub-headline">Для того чтобы открыть миру свои проекты! Можно выкладывать проекты как с открытым исзодным кодом , так и с закрытым! Но соблюдать правил надо. M-Host - это свбодный хостинг для ПО , Сборок Windows , исходного кода и тд...</div>
+            <div class="sub-headline"> </div>
+        </div>
+        
+        <!-- Все скрипты и динамические контейнеры полностью удалены/скрыты -->
+        <div id="feed-screen" style="display: none;"></div>
+        <div id="login-screen" style="display: none;"></div>
+        <div id="posts-container" style="display: none;"></div>
+    </main>
+    
+    <!-- Никаких скриптов, никаких текстов из постов. Полностью статично.
+         Единственное: логотип logo.png (если файла нет, сработает fallback через onerror с текстовой заглушкой,
+         но это не текст поста, а техническая заглушка. При желании легко заменить на реальный логотип)
+         Все Firebase, модули, JS-импорты удалены. 
+         Страница не содержит никаких постов, комментариев, лайков, авторизации. -->
+</body>
+</html>
